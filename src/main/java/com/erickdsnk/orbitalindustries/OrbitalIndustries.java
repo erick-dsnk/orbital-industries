@@ -17,7 +17,7 @@ import cpw.mods.fml.common.event.FMLServerStartingEvent;
     acceptedMinecraftVersions = "[1.7.10]")
 public class OrbitalIndustries {
 
-    public static final String MODID = "OrbitalIndustriesid";
+    public static final String MODID = "OrbitalIndustries";
     public static final Logger LOG = LogManager.getLogger(MODID);
 
     @SidedProxy(
