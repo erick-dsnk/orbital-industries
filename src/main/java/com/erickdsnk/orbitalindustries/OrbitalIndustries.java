@@ -29,6 +29,7 @@ public class OrbitalIndustries {
     // preInit "Run before anything else. Read your config, create blocks, items, etc, and register them with the
     // GameRegistry." (Remove if not needed)
     public void preInit(FMLPreInitializationEvent event) {
+        LOG.info("Orbital Industries architecture initializing");
         proxy.preInit(event);
     }
 
