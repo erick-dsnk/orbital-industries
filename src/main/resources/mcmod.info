@@ -1,0 +1,21 @@
+{
+	"modListVersion": 2,
+	"modList": [{
+		"modid": "${modId}",
+		"name": "${modName}",
+		"description": "A modular space exploration and infrastructure framework for GTNH, designed as a full replacement for Galacticraft with deeper GregTech integration and industrial-scale progression.",
+		"version": "${modVersion}",
+		"mcversion": "${minecraftVersion}",
+		"url": "https://github.com/erick-dsnk/orbital-industries",
+		"updateUrl": "",
+		"authorList": ["erick-dsnk"],
+		"credits": "",
+		"logoFile": "",
+		"screenshots": [],
+		"parent": "",
+		"requiredMods": [],
+		"dependencies": [],
+		"dependants": [],
+		"useDependencyInformation": false
+	}]
+}
