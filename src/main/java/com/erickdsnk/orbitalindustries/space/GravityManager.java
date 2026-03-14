@@ -1,7 +1,6 @@
 package com.erickdsnk.orbitalindustries.space;
 
 import com.erickdsnk.orbitalindustries.planet.Planet;
-import com.erickdsnk.orbitalindustries.planet.PlanetManager;
 
 /**
  * Interface for gravity per dimension/planet. Implementations read from Planet data.

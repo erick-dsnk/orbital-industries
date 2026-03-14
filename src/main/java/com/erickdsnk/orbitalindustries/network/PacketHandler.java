@@ -1,8 +1,9 @@
 package com.erickdsnk.orbitalindustries.network;
 
+import com.erickdsnk.orbitalindustries.OrbitalIndustries;
+
 import cpw.mods.fml.common.network.NetworkRegistry;
 import cpw.mods.fml.common.network.simpleimpl.SimpleNetworkWrapper;
-import com.erickdsnk.orbitalindustries.OrbitalIndustries;
 
 /**
  * Registers Forge channel and packet types. Single entry point for network registration.
@@ -11,7 +12,8 @@ import com.erickdsnk.orbitalindustries.OrbitalIndustries;
  */
 public final class PacketHandler {
 
-    public static final SimpleNetworkWrapper CHANNEL = NetworkRegistry.INSTANCE.newSimpleChannel(OrbitalIndustries.MODID);
+    public static final SimpleNetworkWrapper CHANNEL = NetworkRegistry.INSTANCE
+        .newSimpleChannel(OrbitalIndustries.MODID);
 
     private static int packetId = 0;
 

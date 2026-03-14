@@ -15,8 +15,8 @@ public final class Planet {
     private final boolean hasAtmosphere;
     private final double orbitRadius;
 
-    public Planet(String id, String name, int dimensionId, double gravityMultiplier,
-                  boolean hasAtmosphere, double orbitRadius) {
+    public Planet(String id, String name, int dimensionId, double gravityMultiplier, boolean hasAtmosphere,
+        double orbitRadius) {
         this.id = id;
         this.name = name;
         this.dimensionId = dimensionId;

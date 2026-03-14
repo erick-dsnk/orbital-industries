@@ -1,10 +1,5 @@
 package com.erickdsnk.orbitalindustries;
 
-import cpw.mods.fml.common.event.FMLInitializationEvent;
-import cpw.mods.fml.common.event.FMLPostInitializationEvent;
-import cpw.mods.fml.common.event.FMLPreInitializationEvent;
-import cpw.mods.fml.common.event.FMLServerStartingEvent;
-
 import com.erickdsnk.orbitalindustries.core.ConfigManager;
 import com.erickdsnk.orbitalindustries.core.OIModLogger;
 import com.erickdsnk.orbitalindustries.dimension.DimensionRegistry;
@@ -21,6 +16,11 @@ import com.erickdsnk.orbitalindustries.space.impl.GravityManagerImpl;
 import com.erickdsnk.orbitalindustries.space.impl.OrbitalEnvironmentManagerImpl;
 import com.erickdsnk.orbitalindustries.transport.LaunchManager;
 import com.erickdsnk.orbitalindustries.transport.TeleportManager;
+
+import cpw.mods.fml.common.event.FMLInitializationEvent;
+import cpw.mods.fml.common.event.FMLPostInitializationEvent;
+import cpw.mods.fml.common.event.FMLPreInitializationEvent;
+import cpw.mods.fml.common.event.FMLServerStartingEvent;
 
 public class CommonProxy {
 

@@ -4,8 +4,6 @@ import java.io.File;
 
 import net.minecraftforge.common.config.Configuration;
 
-import com.erickdsnk.orbitalindustries.OrbitalIndustries;
-
 /**
  * Central configuration for the mod. Load/save Forge Configuration and expose typed getters.
  *
@@ -19,11 +17,7 @@ public final class ConfigManager {
 
     public static void load(File configFile) {
         configuration = new Configuration(configFile);
-        greeting = configuration.getString(
-                "greeting",
-                Configuration.CATEGORY_GENERAL,
-                greeting,
-                "How shall I greet?");
+        greeting = configuration.getString("greeting", Configuration.CATEGORY_GENERAL, greeting, "How shall I greet?");
         if (configuration.hasChanged()) {
             configuration.save();
         }

@@ -53,9 +53,15 @@ public final class PositionUtils {
         if (world == null) return DEFAULT_SPAWN_HEIGHT;
         int maxY = Math.min(world.getActualHeight() - 1, 256);
         for (int y = maxY; y >= 0; y--) {
-            if (world.getBlock(x, y, z).getMaterial().blocksMovement()
-                    && !world.getBlock(x, y + 1, z).getMaterial().blocksMovement()
-                    && !world.getBlock(x, y + 2, z).getMaterial().blocksMovement()) {
+            if (world.getBlock(x, y, z)
+                .getMaterial()
+                .blocksMovement()
+                && !world.getBlock(x, y + 1, z)
+                    .getMaterial()
+                    .blocksMovement()
+                && !world.getBlock(x, y + 2, z)
+                    .getMaterial()
+                    .blocksMovement()) {
                 return y + 1;
             }
         }
