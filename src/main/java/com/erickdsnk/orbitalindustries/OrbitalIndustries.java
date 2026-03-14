@@ -10,13 +10,19 @@ import cpw.mods.fml.common.event.FMLPostInitializationEvent;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.common.event.FMLServerStartingEvent;
 
-@Mod(modid = OrbitalIndustries.MODID, version = Tags.VERSION, name = "OrbitalIndustries", acceptedMinecraftVersions = "[1.7.10]")
+@Mod(
+    modid = OrbitalIndustries.MODID,
+    version = Tags.VERSION,
+    name = "OrbitalIndustries",
+    acceptedMinecraftVersions = "[1.7.10]")
 public class OrbitalIndustries {
 
     public static final String MODID = "OrbitalIndustriesid";
     public static final Logger LOG = LogManager.getLogger(MODID);
 
-    @SidedProxy(clientSide = "com.erickdsnk.orbitalindustries.ClientProxy", serverSide = "com.erickdsnk.orbitalindustries.CommonProxy")
+    @SidedProxy(
+        clientSide = "com.erickdsnk.orbitalindustries.ClientProxy",
+        serverSide = "com.erickdsnk.orbitalindustries.CommonProxy")
     public static CommonProxy proxy;
 
     @Mod.EventHandler
