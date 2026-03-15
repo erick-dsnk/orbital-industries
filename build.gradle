@@ -1,0 +1,9 @@
+plugins {
+    id 'com.gtnewhorizons.gtnhconvention'
+}
+
+dependencies {
+    // Forge provides at runtime; local JARs for compile/IDE so the Java extension sees them on classpath
+    compileOnly files('libs/log4j-api-2.0.2.jar')
+    compileOnly files('libs/netty-buffer-4.0.23.Final.jar', 'libs/netty-common-4.0.23.Final.jar')
+}

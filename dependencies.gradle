@@ -36,5 +36,7 @@
 dependencies {
     // Forge provides at runtime; needed for compile/IDE resolution of org.apache.logging.log4j
     compileOnly("org.apache.logging.log4j:log4j-api:2.0.2")
+    // Forge provides at runtime; needed for compile/IDE resolution of io.netty (ByteBuf, etc.)
+    compileOnly("io.netty:netty-buffer:4.0.23.Final")
     //runtimeOnlyNonPublishable("com.github.GTNewHorizons:NotEnoughItems:2.7.69-GTNH:dev")
 }
