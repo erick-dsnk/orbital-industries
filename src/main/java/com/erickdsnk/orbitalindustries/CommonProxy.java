@@ -3,6 +3,7 @@ package com.erickdsnk.orbitalindustries;
 import com.erickdsnk.orbitalindustries.core.ConfigManager;
 import com.erickdsnk.orbitalindustries.core.OIModLogger;
 import com.erickdsnk.orbitalindustries.dimension.DimensionRegistry;
+import com.erickdsnk.orbitalindustries.environment.EnvironmentManager;
 import com.erickdsnk.orbitalindustries.environment.VacuumDamageHandler;
 import com.erickdsnk.orbitalindustries.environment.impl.OxygenSystemImpl;
 import com.erickdsnk.orbitalindustries.network.PacketHandler;
@@ -52,6 +53,8 @@ public class CommonProxy {
         LOG.info("PlanetRegistry initialized");
         OrbitalIndustriesAPI.planetManager = new PlanetManager(OrbitalIndustriesAPI.planetRegistry);
         LOG.info("PlanetManager initialized");
+        OrbitalIndustriesAPI.environmentManager = new EnvironmentManager(OrbitalIndustriesAPI.planetManager);
+        LOG.info("EnvironmentManager initialized");
         OrbitalIndustriesAPI.atmosphereManager = new AtmosphereManagerImpl(OrbitalIndustriesAPI.planetManager);
         LOG.info("AtmosphereManager initialized");
         OrbitalIndustriesAPI.gravityManager = new GravityManagerImpl(OrbitalIndustriesAPI.planetManager);
@@ -62,7 +65,7 @@ public class CommonProxy {
         LOG.info("LaunchManager initialized");
         OrbitalIndustriesAPI.teleportManager = new TeleportManager();
         LOG.info("TeleportManager initialized");
-        OrbitalIndustriesAPI.vacuumDamageHandler = new VacuumDamageHandler();
+        OrbitalIndustriesAPI.vacuumDamageHandler = new VacuumDamageHandler(OrbitalIndustriesAPI.environmentManager);
         LOG.info("VacuumDamageHandler initialized");
         OrbitalIndustriesAPI.oxygenSystem = new OxygenSystemImpl(OrbitalIndustriesAPI.atmosphereManager);
         LOG.info("OxygenSystem initialized");
@@ -92,6 +95,10 @@ public class CommonProxy {
         FMLCommonHandler.instance().bus().register(gravityHandler);
         MinecraftForge.EVENT_BUS.register(gravityHandler);
         LOG.info("Gravity tick handler registered");
+
+        FMLCommonHandler.instance().bus().register(OrbitalIndustriesAPI.vacuumDamageHandler);
+        MinecraftForge.EVENT_BUS.register(OrbitalIndustriesAPI.vacuumDamageHandler);
+        LOG.info("Vacuum damage handler registered");
 
         PacketHandler.registerPackets();
         LOG.info("PacketHandler ready");
