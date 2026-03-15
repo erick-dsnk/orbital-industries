@@ -21,8 +21,16 @@ import com.erickdsnk.orbitalindustries.transport.LaunchManager;
 import com.erickdsnk.orbitalindustries.transport.TeleportManager;
 import com.erickdsnk.orbitalindustries.dimension.OrbitWorldProvider;
 import com.erickdsnk.orbitalindustries.planet.gen.MoonTerrainGenerator;
+import com.erickdsnk.orbitalindustries.planet.gen.PlanetTerrainGeneratorFactory;
 import com.erickdsnk.orbitalindustries.planet.gen.PlanetTerrainRegistry;
 import com.erickdsnk.orbitalindustries.planet.PlanetLoader;
+import com.erickdsnk.orbitalindustries.planet.PlanetTerrainGenerator;
+import com.erickdsnk.orbitalindustries.planet.biome.PlanetBiome;
+import com.erickdsnk.orbitalindustries.planet.structure.NoOpStructureGenerator;
+import com.erickdsnk.orbitalindustries.planet.structure.PlanetStructureRegistry;
+
+import java.util.List;
+import java.util.Map;
 import com.erickdsnk.orbitalindustries.planet.AtmosphereType;
 import com.erickdsnk.orbitalindustries.planet.Planet;
 import com.erickdsnk.orbitalindustries.world.dimension.PlanetDimensionProvider;
@@ -75,22 +83,34 @@ public class CommonProxy {
         LOG.info("VacuumDamageHandler initialized");
         OrbitalIndustriesAPI.oxygenSystem = new OxygenSystemImpl(OrbitalIndustriesAPI.atmosphereManager);
         LOG.info("OxygenSystem initialized");
+        OrbitalIndustriesAPI.structureRegistry = new PlanetStructureRegistry();
+        LOG.info("StructureRegistry initialized");
     }
 
     public void init(FMLInitializationEvent event) {
-        // 1. Register terrain generators (before loading planet JSON)
-        PlanetTerrainRegistry.registerGenerator("moon", new MoonTerrainGenerator());
-        LOG.info("Terrain generators registered");
+        // 1. Register terrain generator factories (before loading planet JSON)
+        PlanetTerrainRegistry.registerFactory("moon", new PlanetTerrainGeneratorFactory() {
+            @Override
+            public PlanetTerrainGenerator create(List<PlanetBiome> biomes, Map<String, Object> options) {
+                return new MoonTerrainGenerator(biomes, options);
+            }
+        });
+        LOG.info("Terrain generator factories registered");
 
-        // 2. Load planet definitions from config/orbitalindustries/planets/
+        // 2. Register structure types (placeholders; implement real generators as
+        // needed)
+        OrbitalIndustriesAPI.structureRegistry.register("abandoned_shelter", new NoOpStructureGenerator());
+        LOG.info("Structure types registered");
+
+        // 3. Load planet definitions from config/orbitalindustries/planets/
         PlanetLoader.loadPlanets();
         LOG.info("Planet configs loaded");
 
-        // 3. Register Earth in registry (not from JSON)
+        // 4. Register Earth in registry (not from JSON)
         OrbitalIndustriesAPI.planetRegistry.register(new Planet("earth", "Earth", 0, null, null, 1.0,
                 AtmosphereType.BREATHABLE, 1.0, true));
 
-        // 4. Register dimensions for all planets that have a terrain generator
+        // 5. Register dimensions for all planets that have a terrain generator
         // (data-driven)
         for (Planet planet : OrbitalIndustriesAPI.planetRegistry.getPlanets()) {
             if (planet.getDimensionId() != 0 && planet.getTerrainGenerator() != null) {
