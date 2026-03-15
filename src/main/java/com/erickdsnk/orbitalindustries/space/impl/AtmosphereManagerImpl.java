@@ -7,8 +7,9 @@ import com.erickdsnk.orbitalindustries.space.AtmosphereManager;
 
 /**
  * Default AtmosphereManager: looks up planet by dimension ID and returns
- * whether
- * atmosphere is breathable (AtmosphereType.BREATHABLE).
+ * whether atmosphere is breathable (AtmosphereType.BREATHABLE). For full
+ * environment queries (World-based, all atmosphere types), use
+ * {@link com.erickdsnk.orbitalindustries.environment.EnvironmentManager}.
  *
  * TODO: Space dimension (no planet) = no atmosphere. Overworld = breathable
  * when not in space.
