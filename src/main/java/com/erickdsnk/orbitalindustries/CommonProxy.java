@@ -23,6 +23,7 @@ import com.erickdsnk.orbitalindustries.planet.Planet;
 import com.erickdsnk.orbitalindustries.space.GravityTickHandler;
 
 import cpw.mods.fml.common.FMLCommonHandler;
+import net.minecraftforge.common.MinecraftForge;
 import cpw.mods.fml.common.event.FMLInitializationEvent;
 import cpw.mods.fml.common.event.FMLPostInitializationEvent;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
@@ -87,7 +88,9 @@ public class CommonProxy {
                     .registerSpaceDimension(orbitId);
         }
 
-        FMLCommonHandler.instance().bus().register(new GravityTickHandler());
+        GravityTickHandler gravityHandler = new GravityTickHandler();
+        FMLCommonHandler.instance().bus().register(gravityHandler);
+        MinecraftForge.EVENT_BUS.register(gravityHandler);
         LOG.info("Gravity tick handler registered");
 
         PacketHandler.registerPackets();
