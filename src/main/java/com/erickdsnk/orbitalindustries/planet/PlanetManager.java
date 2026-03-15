@@ -3,10 +3,13 @@ package com.erickdsnk.orbitalindustries.planet;
 import net.minecraft.world.World;
 
 /**
- * Facade that uses PlanetRegistry and ties into dimension/orbit logic.
+ * Runtime interface for planet systems. Uses PlanetRegistry and ties into
+ * dimension/orbit
+ * logic. Gravity is exposed via GravityManager, which reads from Planet data;
+ * lookup
+ * utilities (getById, getByDimensionId, getCurrentPlanet) support future travel
+ * systems.
  *
- * TODO: getCurrentPlanet(World) - resolve current planet from dimension ID.
- * TODO: listPlanets() - expose for UI or travel selection.
  * TODO: Integrate with DimensionRegistry and OrbitalEnvironmentManager.
  */
 public final class PlanetManager {
@@ -25,11 +28,10 @@ public final class PlanetManager {
         return registry.getById(id);
     }
 
-    /**
-     * TODO: Return current planet for the given world (from world.provider.dimensionId).
-     */
+    /** Resolves the planet for the given world from world.provider.dimensionId. */
     public Planet getCurrentPlanet(World world) {
-        if (world == null) return null;
+        if (world == null)
+            return null;
         return registry.getByDimensionId(world.provider.dimensionId);
     }
 
