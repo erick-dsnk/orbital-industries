@@ -12,7 +12,7 @@ import com.erickdsnk.orbitalindustries.planet.PlanetTerrainGenerator;
 
 /**
  * Simple terrain generator for the Moon: mostly flat terrain with a stone base
- * layer, regolith-like surface (gravel), and basic crater generation using
+ * layer, endstone surface, and basic crater generation using
  * random circles. Minimal implementation to validate the planet terrain
  * architecture.
  * <p>
