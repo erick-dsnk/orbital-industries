@@ -23,9 +23,10 @@ public final class Planet {
     private final double orbitalDistance;
     private final boolean hasSurface;
     private final Planet parent;
+    private final PlanetTerrainGenerator terrainGenerator;
 
     public Planet(String id, String name, int dimensionId, double gravity, AtmosphereType atmosphere,
-            double orbitalDistance, boolean hasSurface, Planet parent) {
+            double orbitalDistance, boolean hasSurface, Planet parent, PlanetTerrainGenerator terrainGenerator) {
         this.id = id;
         this.name = name;
         this.dimensionId = dimensionId;
@@ -34,6 +35,7 @@ public final class Planet {
         this.orbitalDistance = orbitalDistance;
         this.hasSurface = hasSurface;
         this.parent = parent;
+        this.terrainGenerator = terrainGenerator;
     }
 
     public String getId() {
@@ -71,5 +73,14 @@ public final class Planet {
     /** Optional parent planet for moons; null for primary bodies. */
     public Planet getParent() {
         return parent;
+    }
+
+    /**
+     * Optional terrain generator for this planet's dimension. When non-null, the
+     * dimension uses this to generate chunks; when null (e.g. overworld, orbit),
+     * no custom terrain is applied.
+     */
+    public PlanetTerrainGenerator getTerrainGenerator() {
+        return terrainGenerator;
     }
 }
