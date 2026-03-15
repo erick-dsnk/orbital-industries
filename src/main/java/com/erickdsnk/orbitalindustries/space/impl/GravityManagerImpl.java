@@ -5,9 +5,13 @@ import com.erickdsnk.orbitalindustries.planet.PlanetManager;
 import com.erickdsnk.orbitalindustries.space.GravityManager;
 
 /**
- * Default GravityManager: looks up planet by dimension ID and returns its gravity multiplier.
+ * Default GravityManager: looks up planet by dimension ID and returns its
+ * gravity multiplier.
+ * Gravity values will be supplied from planet config; later supports planets,
+ * moons, orbital stations.
  *
- * TODO: Fallback when dimension has no planet (e.g. space dimension = zero or low gravity).
+ * TODO: Fallback when dimension has no planet (e.g. space dimension = zero or
+ * low gravity).
  */
 public final class GravityManagerImpl implements GravityManager {
 
