@@ -23,19 +23,26 @@ import com.erickdsnk.orbitalindustries.planet.biome.PlanetBiomeProvider;
 /**
  * Terrain generator for the Moon: rolling highlands and lowlands (multi-octave
  * noise), stone base, endstone/regolith surface, crater generation, and 3D
- * noise-based cave carving. Surface height varies so the landscape is not flat
- * apart from craters. Caves carve through stone and regolith (lunar lava-tube
- * style). Uses
- * {@link PlanetBiomeProvider} for planet-specific biomes (e.g.
- * cratered_highlands,
- * smooth_plains) with different height and crater density.
+ * noise-based cave carving.
  * <p>
- * This system will later support Mars canyon systems (biome-driven height and
- * structure hooks), asteroid field variation (biome as asteroid type), ice
- * worlds
- * (ice/snow/rock biomes), and gas giant moons (each dimension with its own
- * planet and biome list).
+ * <strong>Deprecated:</strong> Use the modular pipeline instead: register
+ * {@code "moon"} or {@code "noisy_surface"} with
+ * {@code "features": ["craters", "caves"]}
+ * in generator options. The "moon" factory now returns
+ * {@link ModularTerrainGenerator} composed of
+ * {@link NoisySurfaceTerrainGenerator}
+ * plus {@link com.erickdsnk.orbitalindustries.planet.gen.feature.CraterFeature}
+ * and
+ * {@link com.erickdsnk.orbitalindustries.planet.gen.feature.CaveFeature}. This
+ * class
+ * is retained only for
+ * {@link com.erickdsnk.orbitalindustries.world.gen.MoonChunkProvider} and
+ * static helpers
+ * ({@link #terrainNoise}, {@link #regolithLayersAt}).
+ *
+ * @deprecated Use modular terrain with "moon" or "noisy_surface" + features
  */
+@Deprecated
 public class MoonTerrainGenerator implements PlanetTerrainGenerator {
 
     private static final OIModLogger LOG = new OIModLogger("MoonTerrainGenerator");
