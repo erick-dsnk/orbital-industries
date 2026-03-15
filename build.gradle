@@ -6,4 +6,6 @@ dependencies {
     // Forge provides at runtime; local JARs for compile/IDE so the Java extension sees them on classpath
     compileOnly files('libs/log4j-api-2.0.2.jar')
     compileOnly files('libs/netty-buffer-4.0.23.Final.jar', 'libs/netty-common-4.0.23.Final.jar')
+    // JSON planet config loading (1.7.10 / Java 6 compatible)
+    implementation 'com.google.code.gson:gson:2.2.4'
 }
