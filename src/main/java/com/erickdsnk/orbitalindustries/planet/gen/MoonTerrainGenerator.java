@@ -1,5 +1,7 @@
 package com.erickdsnk.orbitalindustries.planet.gen;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 
 import net.minecraft.block.Block;
@@ -25,14 +27,18 @@ public class MoonTerrainGenerator implements PlanetTerrainGenerator {
     private static final int STONE_HEIGHT = 62;
     private static final int REGOLITH_LAYERS = 2;
     private static final int CRATER_CHANCE_PER_CHUNK = 3;
-    private static final int MAX_CRATER_RADIUS = 4;
-    private static final int MIN_CRATER_RADIUS = 1;
+    private static final int MAX_CRATER_RADIUS = 6;
+    private static final int MIN_CRATER_RADIUS = 2;
+    /** Maximum depth (blocks) at crater center; bowl shape so rim is shallow. */
+    private static final int MAX_CRATER_DEPTH = 5;
+    private static final int MIN_CRATER_DEPTH = 2;
+    /** Rim height in blocks; real craters have a raised ejecta rim. */
+    private static final int CRATER_RIM_HEIGHT = 1;
 
     @Override
     public void generateTerrain(World world, Chunk chunk, int chunkX, int chunkZ) {
         Block stone = getStoneBlock();
         Block surface = getSurfaceBlock();
-        Random rng = new Random(world.getSeed() + (long) chunkX * 341873128712L + (long) chunkZ * 132897987541L);
 
         for (int localX = 0; localX < 16; localX++) {
             for (int localZ = 0; localZ < 16; localZ++) {
@@ -45,30 +51,99 @@ public class MoonTerrainGenerator implements PlanetTerrainGenerator {
             }
         }
 
-        int numCraters = rng.nextInt(CRATER_CHANCE_PER_CHUNK + 1);
-        for (int i = 0; i < numCraters; i++) {
-            int cx = rng.nextInt(16);
-            int cz = rng.nextInt(16);
-            int radius = MIN_CRATER_RADIUS + rng.nextInt(MAX_CRATER_RADIUS - MIN_CRATER_RADIUS + 1);
-            int cy = BASE_SURFACE_Y + rng.nextInt(REGOLITH_LAYERS + 1);
-            carveCrater(chunk, cx, cy, cz, radius);
-        }
+        int baseWorldX = chunkX * 16;
+        int baseWorldZ = chunkZ * 16;
+        List<Crater> craters = collectCratersInNeighborhood(world.getSeed(), chunkX, chunkZ);
+        applyCratersToChunk(chunk, surface, baseWorldX, baseWorldZ, craters);
     }
 
-    private void carveCrater(Chunk chunk, int centerX, int centerY, int centerZ, int radius) {
-        int radiusSq = radius * radius;
-        for (int dx = -radius; dx <= radius; dx++) {
-            for (int dz = -radius; dz <= radius; dz++) {
-                if (dx * dx + dz * dz <= radiusSq) {
-                    int x = centerX + dx;
-                    int z = centerZ + dz;
-                    if (x >= 0 && x < 16 && z >= 0 && z < 16) {
-                        for (int y = centerY; y >= 0; y--) {
-                            chunk.func_150807_a(x, y, z, Blocks.air, 0);
+    /**
+     * Collect all craters whose circles can intersect this chunk. We consider the
+     * 3x3 chunk neighborhood so craters centered in a neighbor chunk still get
+     * carved into this chunk where they overlap. Craters are placed in world
+     * coordinates so the same crater is generated consistently from any chunk.
+     */
+    private List<Crater> collectCratersInNeighborhood(long worldSeed, int chunkX, int chunkZ) {
+        List<Crater> list = new ArrayList<Crater>();
+        for (int dcx = -1; dcx <= 1; dcx++) {
+            for (int dcz = -1; dcz <= 1; dcz++) {
+                int nc = chunkX + dcx;
+                int nz = chunkZ + dcz;
+                long seed = worldSeed + (long) nc * 341873128712L + (long) nz * 132897987541L;
+                Random rng = new Random(seed);
+                int baseNx = nc * 16;
+                int baseNz = nz * 16;
+                int numCraters = rng.nextInt(CRATER_CHANCE_PER_CHUNK + 1);
+                for (int i = 0; i < numCraters; i++) {
+                    int cwx = baseNx + rng.nextInt(16);
+                    int cwz = baseNz + rng.nextInt(16);
+                    int radius = MIN_CRATER_RADIUS + rng.nextInt(MAX_CRATER_RADIUS - MIN_CRATER_RADIUS + 1);
+                    int maxDepth = MIN_CRATER_DEPTH + rng.nextInt(MAX_CRATER_DEPTH - MIN_CRATER_DEPTH + 1);
+                    list.add(new Crater(cwx, cwz, radius, maxDepth));
+                }
+            }
+        }
+        return list;
+    }
+
+    /**
+     * Apply all craters to the current chunk using world coordinates. For each
+     * block in the chunk we compute the max depth from any overlapping crater
+     * (bowl shape), then carve. Rim is applied where we're just outside a crater.
+     */
+    private void applyCratersToChunk(Chunk chunk, Block surfaceBlock, int baseWorldX, int baseWorldZ,
+            List<Crater> craters) {
+        int surfaceY = BASE_SURFACE_Y + REGOLITH_LAYERS - 1;
+
+        for (int localX = 0; localX < 16; localX++) {
+            for (int localZ = 0; localZ < 16; localZ++) {
+                int wx = baseWorldX + localX;
+                int wz = baseWorldZ + localZ;
+
+                int maxDepth = 0;
+                boolean inRim = false;
+                for (Crater c : craters) {
+                    double dx = wx - c.worldX;
+                    double dz = wz - c.worldZ;
+                    double dist = Math.sqrt(dx * dx + dz * dz);
+                    if (dist <= c.radius) {
+                        double t = dist / Math.max(1, c.radius);
+                        int depth = (int) (c.maxDepth * (1.0 - t * t) + 0.5);
+                        if (depth > maxDepth) {
+                            maxDepth = depth;
                         }
+                    } else if (dist <= c.radius + 1 && CRATER_RIM_HEIGHT > 0) {
+                        inRim = true;
+                    }
+                }
+                maxDepth = Math.min(maxDepth, surfaceY + 1);
+                for (int d = 0; d < maxDepth; d++) {
+                    int y = surfaceY - d;
+                    if (y >= 0) {
+                        chunk.func_150807_a(localX, y, localZ, Blocks.air, 0);
+                    }
+                }
+                if (inRim && maxDepth == 0) {
+                    int rimY = surfaceY + CRATER_RIM_HEIGHT;
+                    if (rimY < 256) {
+                        chunk.func_150807_a(localX, rimY, localZ, surfaceBlock, 0);
                     }
                 }
             }
+        }
+    }
+
+    private static final class Crater {
+        final int worldX;
+        final int worldZ;
+        final int radius;
+        final int maxDepth;
+
+        Crater(int worldX, int worldZ, int radius, int maxDepth) {
+            this.worldX = worldX;
+            this.worldZ = worldZ;
+            this.radius = radius;
+            this.maxDepth = maxDepth;
         }
     }
 
