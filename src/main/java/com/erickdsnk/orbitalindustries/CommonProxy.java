@@ -15,10 +15,13 @@ import com.erickdsnk.orbitalindustries.registry.ItemRegistry;
 import com.erickdsnk.orbitalindustries.space.impl.AtmosphereManagerImpl;
 import com.erickdsnk.orbitalindustries.space.impl.GravityManagerImpl;
 import com.erickdsnk.orbitalindustries.space.impl.OrbitalEnvironmentManagerImpl;
+import com.erickdsnk.orbitalindustries.transport.CommandMoon;
 import com.erickdsnk.orbitalindustries.transport.CommandOrbit;
 import com.erickdsnk.orbitalindustries.transport.LaunchManager;
 import com.erickdsnk.orbitalindustries.transport.TeleportManager;
+import com.erickdsnk.orbitalindustries.dimension.MoonWorldProvider;
 import com.erickdsnk.orbitalindustries.dimension.OrbitWorldProvider;
+import com.erickdsnk.orbitalindustries.planet.gen.MoonTerrainGenerator;
 import com.erickdsnk.orbitalindustries.planet.AtmosphereType;
 import com.erickdsnk.orbitalindustries.planet.Planet;
 import com.erickdsnk.orbitalindustries.space.GravityTickHandler;
@@ -78,18 +81,27 @@ public class CommonProxy {
         // environment
         // systems (planets, moons, orbital stations).
         OrbitalIndustriesAPI.planetRegistry.register(
-                new Planet("earth", "Earth", 0, 1.0, AtmosphereType.BREATHABLE, 1.0, true, null));
+                new Planet("earth", "Earth", 0, 1.0, AtmosphereType.BREATHABLE, 1.0, true, null, null));
 
         int orbitId = ConfigManager.getOrbitDimensionId();
         OrbitalIndustriesAPI.dimensionRegistry.registerDimension(orbitId, OrbitWorldProvider.class);
         LOG.info("Registered dimension orbit with ID " + orbitId);
 
         OrbitalIndustriesAPI.planetRegistry.register(
-                new Planet("orbit", "Orbit", orbitId, 0.1, AtmosphereType.NONE, 0.0, false, null));
+                new Planet("orbit", "Orbit", orbitId, 0.1, AtmosphereType.NONE, 0.0, false, null, null));
         if (OrbitalIndustriesAPI.orbitalEnvironmentManager instanceof OrbitalEnvironmentManagerImpl) {
             ((OrbitalEnvironmentManagerImpl) OrbitalIndustriesAPI.orbitalEnvironmentManager)
                     .registerSpaceDimension(orbitId);
         }
+
+        Planet earth = OrbitalIndustriesAPI.planetRegistry.getById("earth");
+        int moonId = ConfigManager.getMoonDimensionId();
+        OrbitalIndustriesAPI.dimensionRegistry.registerDimension(moonId, MoonWorldProvider.class);
+        LOG.info("Moon dimension registered with ID " + moonId);
+        OrbitalIndustriesAPI.planetRegistry.register(
+                new Planet("moon", "Moon", moonId, 0.16, AtmosphereType.NONE, 0.25, true, earth,
+                        new MoonTerrainGenerator()));
+        LOG.info("Moon planet registered with dimension id " + moonId);
 
         GravityTickHandler gravityHandler = new GravityTickHandler();
         FMLCommonHandler.instance().bus().register(gravityHandler);
@@ -115,5 +127,6 @@ public class CommonProxy {
 
     public void serverStarting(FMLServerStartingEvent event) {
         event.registerServerCommand(new CommandOrbit());
+        event.registerServerCommand(new CommandMoon());
     }
 }
