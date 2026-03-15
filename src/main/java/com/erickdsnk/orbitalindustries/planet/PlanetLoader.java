@@ -2,11 +2,15 @@ package com.erickdsnk.orbitalindustries.planet;
 
 import java.io.File;
 import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -19,6 +23,7 @@ import net.minecraft.init.Blocks;
 
 import com.erickdsnk.orbitalindustries.OrbitalIndustriesAPI;
 import com.erickdsnk.orbitalindustries.core.BlockResolver;
+import com.erickdsnk.orbitalindustries.planet.biome.PlanetBiomeRegistry;
 import com.erickdsnk.orbitalindustries.core.OIModLogger;
 import com.erickdsnk.orbitalindustries.planet.biome.PlanetBiome;
 import com.erickdsnk.orbitalindustries.planet.gen.PlanetTerrainRegistry;
@@ -27,54 +32,88 @@ import com.erickdsnk.orbitalindustries.planet.structure.StructureEntry;
 import cpw.mods.fml.common.Loader;
 
 /**
- * Loads planet definitions from JSON files in
- * config/orbitalindustries/planets/.
- * Each JSON file defines one planet: terrain generator (by id), biomes,
- * structures, and generator options. Terrain generator is created per planet
- * via {@link PlanetTerrainRegistry#createGenerator}.
+ * Loads planet definitions from JSON. Default dimension configs are read from
+ * the mod resources ({@code orbitalindustries/planets/*.json}); users can
+ * override or add planets by placing JSON files in
+ * {@code config/orbitalindustries/planets/} (config dir takes precedence per
+ * id).
+ * Each JSON defines one planet: terrain generator (by id), biomes, structures,
+ * and generator options. Terrain generator is created per planet via
+ * {@link PlanetTerrainRegistry#createGenerator}.
  */
 public final class PlanetLoader {
 
     private static final OIModLogger LOG = new OIModLogger("PlanetLoader");
+    private static final String PLANETS_RESOURCE_PATH = "orbitalindustries/planets/";
+    /** Default dimension JSONs shipped in the mod JAR (under resources). */
+    private static final String[] DEFAULT_PLANET_RESOURCES = { "moon.json" };
     private static final double DEFAULT_GRAVITY = 0.16;
     private static final double DEFAULT_CHANCE_PER_CHUNK = 0.01;
     private static final Gson GSON = new Gson();
 
     /**
-     * Scan config/orbitalindustries/planets/, parse each JSON file, resolve
-     * biomes (block names), create terrain generator via factory, and register
-     * planets with {@link PlanetRegistry}.
+     * Load planet configs from resources first (defaults), then from config
+     * directory (overrides/adds). Register each with {@link PlanetRegistry}.
      */
     public static void loadPlanets() {
         if (OrbitalIndustriesAPI.planetRegistry == null) {
             LOG.warn("PlanetRegistry not initialized; skipping planet load");
             return;
         }
-        File configDir = Loader.instance().getConfigDir();
-        File planetsDir = new File(new File(configDir, "orbitalindustries"), "planets");
-        if (!planetsDir.exists()) {
-            if (!planetsDir.mkdirs()) {
-                LOG.warn("Could not create planets config dir: " + planetsDir.getAbsolutePath());
-                return;
-            }
-        }
-        writeDefaultMoonJsonIfMissing(planetsDir);
-        File[] files = planetsDir.listFiles();
-        if (files == null) {
-            return;
-        }
-        Set<String> seenIds = new HashSet<String>();
-        Set<Integer> seenDimensions = new HashSet<Integer>();
-        for (File file : files) {
-            if (!file.getName().toLowerCase().endsWith(".json")) {
+        Map<String, PlanetConfig> byId = new LinkedHashMap<String, PlanetConfig>();
+
+        // 1. Load defaults from mod resources
+        for (String name : DEFAULT_PLANET_RESOURCES) {
+            String path = PLANETS_RESOURCE_PATH + name;
+            InputStream stream = PlanetLoader.class.getClassLoader().getResourceAsStream(path);
+            if (stream == null) {
+                LOG.warn("Default planet resource not found: " + path);
                 continue;
             }
             try {
-                PlanetConfig config = GSON.fromJson(new FileReader(file), PlanetConfig.class);
-                if (config == null || config.id == null || config.id.isEmpty()) {
-                    LOG.warn("Skipping " + file.getName() + ": missing or empty id");
-                    continue;
+                Reader reader = new InputStreamReader(stream, StandardCharsets.UTF_8);
+                PlanetConfig config = GSON.fromJson(reader, PlanetConfig.class);
+                reader.close();
+                if (config != null && config.id != null && !config.id.isEmpty()) {
+                    byId.put(config.id, config);
+                    LOG.info("Loaded default planet from resources: " + config.id);
                 }
+            } catch (JsonSyntaxException e) {
+                LOG.warn("Invalid JSON in resource " + path + ": " + e.getMessage());
+            } catch (IOException e) {
+                LOG.warn("Could not read resource " + path + ": " + e.getMessage());
+            }
+        }
+
+        // 2. Load from config directory (overrides or adds)
+        File configDir = Loader.instance().getConfigDir();
+        File planetsDir = new File(new File(configDir, "orbitalindustries"), "planets");
+        if (planetsDir.exists()) {
+            File[] files = planetsDir.listFiles();
+            if (files != null) {
+                for (File file : files) {
+                    if (!file.getName().toLowerCase().endsWith(".json")) {
+                        continue;
+                    }
+                    try {
+                        PlanetConfig config = GSON.fromJson(new FileReader(file), PlanetConfig.class);
+                        if (config != null && config.id != null && !config.id.isEmpty()) {
+                            byId.put(config.id, config);
+                            LOG.info("Loaded planet from config: " + file.getName() + " (id=" + config.id + ")");
+                        }
+                    } catch (JsonSyntaxException e) {
+                        LOG.warn("Invalid JSON in " + file.getName() + ": " + e.getMessage());
+                    } catch (IOException e) {
+                        LOG.warn("Could not read " + file.getName() + ": " + e.getMessage());
+                    }
+                }
+            }
+        }
+
+        // 3. Register each planet
+        Set<Integer> seenDimensions = new HashSet<Integer>();
+        for (PlanetConfig config : byId.values()) {
+            try {
                 if (config.name == null || config.name.isEmpty()) {
                     config.name = config.id;
                 }
@@ -92,10 +131,6 @@ public final class PlanetLoader {
                     LOG.warn("Skipping " + config.id + ": unknown terrainGenerator '" + config.terrainGenerator + "'");
                     continue;
                 }
-                if (seenIds.contains(config.id)) {
-                    LOG.warn("Skipping " + file.getName() + ": duplicate planet id " + config.id);
-                    continue;
-                }
                 if (seenDimensions.contains(config.dimensionId)) {
                     LOG.warn("Skipping " + config.id + ": duplicate dimensionId " + config.dimensionId);
                     continue;
@@ -106,14 +141,10 @@ public final class PlanetLoader {
                 Planet planet = new Planet(config.id, config.name, config.dimensionId, config.terrainGenerator,
                         generator, gravity, atmosphere, 0.0, generator != null, biomes, structures);
                 OrbitalIndustriesAPI.planetRegistry.registerPlanet(planet);
-                seenIds.add(config.id);
                 seenDimensions.add(config.dimensionId);
-                LOG.info("Loaded planet from " + file.getName() + ": id=" + config.id + ", dimensionId="
-                        + config.dimensionId);
-            } catch (JsonSyntaxException e) {
-                LOG.warn("Invalid JSON in " + file.getName() + ": " + e.getMessage());
-            } catch (IOException e) {
-                LOG.warn("Could not read " + file.getName() + ": " + e.getMessage());
+                LOG.info("Registered planet: id=" + config.id + ", dimensionId=" + config.dimensionId);
+            } catch (Exception e) {
+                LOG.warn("Failed to register planet " + config.id + ": " + e.getMessage());
             }
         }
     }
@@ -122,6 +153,7 @@ public final class PlanetLoader {
         if (biomeConfigs == null || biomeConfigs.isEmpty()) {
             return Collections.emptyList();
         }
+        PlanetBiomeRegistry biomeRegistry = OrbitalIndustriesAPI.biomeRegistry;
         List<PlanetBiome> list = new ArrayList<PlanetBiome>();
         for (BiomeConfig b : biomeConfigs) {
             if (b.id == null || b.id.isEmpty()) {
@@ -132,7 +164,12 @@ public final class PlanetLoader {
             Block stone = BlockResolver.getBlockByName(b.stoneBlock, Blocks.stone);
             double heightMod = b.terrainHeightModifier != null ? b.terrainHeightModifier.doubleValue() : 0.0;
             double craterMod = b.craterProbabilityModifier != null ? b.craterProbabilityModifier.doubleValue() : 1.0;
-            int mcBiomeId = b.minecraftBiomeId != null ? b.minecraftBiomeId.intValue() : -1;
+            int mcBiomeId = -1;
+            if (biomeRegistry != null) {
+                mcBiomeId = biomeRegistry.getOrRegister(b.id, displayName);
+            } else if (b.minecraftBiomeId != null) {
+                mcBiomeId = b.minecraftBiomeId.intValue();
+            }
             list.add(new PlanetBiome(b.id, displayName, surface, stone, heightMod, craterMod, mcBiomeId));
         }
         return list.isEmpty() ? Collections.<PlanetBiome>emptyList() : Collections.unmodifiableList(list);
@@ -152,45 +189,6 @@ public final class PlanetLoader {
             list.add(new StructureEntry(s.type, chance, params));
         }
         return list.isEmpty() ? null : Collections.unmodifiableList(list);
-    }
-
-    private static void writeDefaultMoonJsonIfMissing(File planetsDir) {
-        File moonJson = new File(planetsDir, "moon.json");
-        if (moonJson.exists()) {
-            return;
-        }
-        StringBuilder sb = new StringBuilder();
-        sb.append("{\n");
-        sb.append("  \"id\": \"moon\",\n");
-        sb.append("  \"name\": \"Moon\",\n");
-        sb.append("  \"dimensionId\": -40,\n");
-        sb.append("  \"terrainGenerator\": \"moon\",\n");
-        sb.append("  \"gravity\": 0.16,\n");
-        sb.append("  \"atmosphere\": \"NONE\",\n");
-        sb.append("  \"generatorOptions\": {\n");
-        sb.append("    \"baseSurfaceY\": 64,\n");
-        sb.append("    \"craterChancePerChunk\": 3\n");
-        sb.append("  },\n");
-        sb.append("  \"biomes\": [\n");
-        sb.append("    {\n");
-        sb.append("      \"id\": \"moon_default\",\n");
-        sb.append("      \"displayName\": \"Lunar Surface\",\n");
-        sb.append("      \"surfaceBlock\": \"minecraft:end_stone\",\n");
-        sb.append("      \"stoneBlock\": \"minecraft:stone\",\n");
-        sb.append("      \"terrainHeightModifier\": 0,\n");
-        sb.append("      \"craterProbabilityModifier\": 1.0\n");
-        sb.append("    }\n");
-        sb.append("  ],\n");
-        sb.append("  \"structures\": []\n");
-        sb.append("}\n");
-        try {
-            FileWriter w = new FileWriter(moonJson);
-            w.write(sb.toString());
-            w.close();
-            LOG.info("Created default config/orbitalindustries/planets/moon.json");
-        } catch (IOException e) {
-            LOG.warn("Could not write default moon.json: " + e.getMessage());
-        }
     }
 
     private static AtmosphereType parseAtmosphere(String s) {
