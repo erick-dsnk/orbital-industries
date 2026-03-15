@@ -45,8 +45,9 @@ public class PlanetChunkProvider implements IChunkProvider {
             return createEmptyChunk(chunkX, chunkZ);
         }
 
-        if ("moon".equals(planet.getId())) {
-            LOG.debug("Generating moon chunk at " + chunkX + ", " + chunkZ);
+        if (!planet.getBiomes().isEmpty()) {
+            LOG.debug("Chunk " + chunkX + "," + chunkZ + " generated (planet " + planet.getId() + ", "
+                    + planet.getBiomes().size() + " biomes)");
         }
 
         Chunk chunk = new Chunk(world, chunkX, chunkZ);
