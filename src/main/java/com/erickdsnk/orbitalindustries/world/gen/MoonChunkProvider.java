@@ -37,7 +37,7 @@ public class MoonChunkProvider implements IChunkProvider {
 
     // --- Terrain constants (match MoonTerrainGenerator for consistent look) ---
     private static final int BASE_SURFACE_Y = 64;
-    private static final double TERRAIN_NOISE_AMPLITUDE = 32.0;
+    private static final double TERRAIN_NOISE_AMPLITUDE = 8.0;
     private static final int MIN_REGOLITH_LAYERS = 1;
     private static final int MAX_REGOLITH_LAYERS = 3;
 
@@ -78,12 +78,17 @@ public class MoonChunkProvider implements IChunkProvider {
             for (int localZ = 0; localZ < CHUNK_SIZE_XZ; localZ++) {
                 int wx = baseWorldX + localX;
                 int wz = baseWorldZ + localZ;
+
                 double noise = MoonTerrainGenerator.terrainNoise(worldSeed, wx, wz);
+
                 int surfaceHeight = BASE_SURFACE_Y
                         + (int) Math.round(noise * TERRAIN_NOISE_AMPLITUDE);
+
                 int regolithLayers = MoonTerrainGenerator.regolithLayersAt(worldSeed, wx, wz);
+
                 if (regolithLayers < MIN_REGOLITH_LAYERS)
                     regolithLayers = MIN_REGOLITH_LAYERS;
+
                 if (regolithLayers > MAX_REGOLITH_LAYERS)
                     regolithLayers = MAX_REGOLITH_LAYERS;
 
