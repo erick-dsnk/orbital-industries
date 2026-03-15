@@ -19,18 +19,14 @@ import com.erickdsnk.orbitalindustries.transport.CommandMoon;
 import com.erickdsnk.orbitalindustries.transport.CommandOrbit;
 import com.erickdsnk.orbitalindustries.transport.LaunchManager;
 import com.erickdsnk.orbitalindustries.transport.TeleportManager;
-import com.erickdsnk.orbitalindustries.dimension.MoonWorldProvider;
 import com.erickdsnk.orbitalindustries.dimension.OrbitWorldProvider;
 import com.erickdsnk.orbitalindustries.planet.gen.MoonTerrainGenerator;
+import com.erickdsnk.orbitalindustries.planet.gen.PlanetTerrainRegistry;
+import com.erickdsnk.orbitalindustries.planet.PlanetLoader;
 import com.erickdsnk.orbitalindustries.planet.AtmosphereType;
 import com.erickdsnk.orbitalindustries.planet.Planet;
-import com.erickdsnk.orbitalindustries.planet.biome.PlanetBiome;
-import com.erickdsnk.orbitalindustries.planet.biome.PlanetBiomeGenBase;
+import com.erickdsnk.orbitalindustries.world.dimension.PlanetDimensionProvider;
 
-import java.util.Arrays;
-import java.util.List;
-
-import net.minecraft.init.Blocks;
 import com.erickdsnk.orbitalindustries.space.GravityTickHandler;
 
 import cpw.mods.fml.common.FMLCommonHandler;
@@ -82,44 +78,27 @@ public class CommonProxy {
     }
 
     public void init(FMLInitializationEvent event) {
-        // Init: register overworld (Earth) and orbit dimension + planet; gravity tick
-        // handler.
-        // Init order ensures dimensions and gravity are ready for travel and
-        // environment
-        // systems (planets, moons, orbital stations).
-        OrbitalIndustriesAPI.planetRegistry.register(
-                new Planet("earth", "Earth", 0, 1.0, AtmosphereType.BREATHABLE, 1.0, true, null, null));
+        // 1. Register terrain generators (before loading planet JSON)
+        PlanetTerrainRegistry.registerGenerator("moon", new MoonTerrainGenerator());
+        LOG.info("Terrain generators registered");
 
-        int orbitId = ConfigManager.getOrbitDimensionId();
-        OrbitalIndustriesAPI.dimensionRegistry.registerDimension(orbitId, OrbitWorldProvider.class);
-        LOG.info("Registered dimension orbit with ID " + orbitId);
+        // 2. Load planet definitions from config/orbitalindustries/planets/
+        PlanetLoader.loadPlanets();
+        LOG.info("Planet configs loaded");
 
-        OrbitalIndustriesAPI.planetRegistry.register(
-                new Planet("orbit", "Orbit", orbitId, 0.1, AtmosphereType.NONE, 0.0, false, null, null));
-        if (OrbitalIndustriesAPI.orbitalEnvironmentManager instanceof OrbitalEnvironmentManagerImpl) {
-            ((OrbitalEnvironmentManagerImpl) OrbitalIndustriesAPI.orbitalEnvironmentManager)
-                    .registerSpaceDimension(orbitId);
+        // 3. Register Earth in registry (not from JSON)
+        OrbitalIndustriesAPI.planetRegistry.register(new Planet("earth", "Earth", 0, null, null, 1.0,
+                AtmosphereType.BREATHABLE, 1.0, true));
+
+        // 4. Register dimensions for all planets that have a terrain generator
+        // (data-driven)
+        for (Planet planet : OrbitalIndustriesAPI.planetRegistry.getPlanets()) {
+            if (planet.getDimensionId() != 0 && planet.getTerrainGenerator() != null) {
+                OrbitalIndustriesAPI.dimensionRegistry.registerDimension(planet.getDimensionId(),
+                        PlanetDimensionProvider.class);
+                LOG.info("Registered planet dimension: " + planet.getId() + " (dim " + planet.getDimensionId() + ")");
+            }
         }
-
-        Planet earth = OrbitalIndustriesAPI.planetRegistry.getById("earth");
-        int moonId = ConfigManager.getMoonDimensionId();
-        OrbitalIndustriesAPI.dimensionRegistry.registerDimension(moonId, MoonWorldProvider.class);
-        LOG.info("Moon dimension registered with ID " + moonId);
-
-        final int MOON_BIOME_CRATERED_ID = 40;
-        final int MOON_BIOME_SMOOTH_ID = 41;
-        new PlanetBiomeGenBase(MOON_BIOME_CRATERED_ID, "Cratered Highlands");
-        new PlanetBiomeGenBase(MOON_BIOME_SMOOTH_ID, "Smooth Plains");
-
-        List<PlanetBiome> moonBiomes = Arrays.<PlanetBiome>asList(
-                new PlanetBiome("moon_cratered_highlands", "Cratered Highlands", Blocks.end_stone, Blocks.stone,
-                        3.0, 1.8, MOON_BIOME_CRATERED_ID),
-                new PlanetBiome("moon_smooth_plains", "Smooth Plains", Blocks.end_stone, Blocks.stone,
-                        -1.0, 0.4, MOON_BIOME_SMOOTH_ID));
-        OrbitalIndustriesAPI.planetRegistry.register(
-                new Planet("moon", "Moon", moonId, 0.16, AtmosphereType.NONE, 0.25, true, earth,
-                        new MoonTerrainGenerator(moonBiomes), moonBiomes));
-        LOG.info("Moon planet registered with dimension id " + moonId);
 
         GravityTickHandler gravityHandler = new GravityTickHandler();
         FMLCommonHandler.instance().bus().register(gravityHandler);
@@ -135,16 +114,10 @@ public class CommonProxy {
     }
 
     public void postInit(FMLPostInitializationEvent event) {
-        int orbitId = ConfigManager.getOrbitDimensionId();
-        boolean dimOk = net.minecraftforge.common.DimensionManager.isDimensionRegistered(orbitId);
-        double gravity = OrbitalIndustriesAPI.gravityManager.getGravityMultiplier(orbitId);
-        if (dimOk && Math.abs(gravity - 0.1) < 0.001) {
-            LOG.info("Space dimension framework validated: orbit dim " + orbitId + ", gravity " + gravity);
-        }
+
     }
 
     public void serverStarting(FMLServerStartingEvent event) {
-        event.registerServerCommand(new CommandOrbit());
         event.registerServerCommand(new CommandMoon());
     }
 }
