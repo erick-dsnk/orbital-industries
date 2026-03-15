@@ -5,6 +5,8 @@ import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 
+import com.erickdsnk.orbitalindustries.dimension.SpaceTeleporter;
+import com.erickdsnk.orbitalindustries.dimension.SpaceWorldProvider;
 import com.erickdsnk.orbitalindustries.util.PositionUtils;
 
 import cpw.mods.fml.common.FMLCommonHandler;
@@ -12,17 +14,15 @@ import cpw.mods.fml.common.FMLCommonHandler;
 /**
  * Handles teleportation between dimensions (e.g. orbit to planet surface).
  * Target validation and position calculation use PositionUtils.findSafeSpawnY.
- * Later will integrate with DimensionRegistry and PlanetManager for valid
- * targets
- * (planets, moons, orbital stations) and space travel.
+ * For space dimensions, uses SpaceTeleporter so no nether portal is created.
  */
 public final class TeleportManager {
 
     /**
      * Teleport a player to the given dimension at (x, y, z). Only EntityPlayerMP
-     * is supported; other entities are no-op. Uses Forge transfer then sets
-     * position so no portal is required. Later will support planets, moons,
-     * orbital stations via target resolution and safe spawn.
+     * is supported; other entities are no-op. For space dimensions we pass
+     * SpaceTeleporter into transferPlayerToDimension so no portal is built and
+     * the player is not sent to the nether. Position is set after transfer.
      */
     public void teleportToDimension(Entity entity, int dimensionId, double x, double y, double z) {
         if (entity == null || !(entity instanceof EntityPlayerMP))
@@ -35,7 +35,12 @@ public final class TeleportManager {
         if (toWorld == null)
             return;
 
-        server.getConfigurationManager().transferPlayerToDimension(player, dimensionId);
+        if (toWorld.provider instanceof SpaceWorldProvider) {
+            server.getConfigurationManager().transferPlayerToDimension(player, dimensionId,
+                    new SpaceTeleporter(toWorld));
+        } else {
+            server.getConfigurationManager().transferPlayerToDimension(player, dimensionId);
+        }
         player.setPositionAndUpdate(x, y, z);
     }
 
