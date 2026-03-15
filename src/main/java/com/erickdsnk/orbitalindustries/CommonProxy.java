@@ -18,6 +18,7 @@ import com.erickdsnk.orbitalindustries.transport.CommandOrbit;
 import com.erickdsnk.orbitalindustries.transport.LaunchManager;
 import com.erickdsnk.orbitalindustries.transport.TeleportManager;
 import com.erickdsnk.orbitalindustries.dimension.OrbitWorldProvider;
+import com.erickdsnk.orbitalindustries.planet.AtmosphereType;
 import com.erickdsnk.orbitalindustries.planet.Planet;
 import com.erickdsnk.orbitalindustries.space.GravityTickHandler;
 
@@ -67,16 +68,20 @@ public class CommonProxy {
     }
 
     public void init(FMLInitializationEvent event) {
-        // Init: register orbit dimension and planet; gravity tick handler. Init order
-        // ensures
-        // dimensions and gravity are ready for travel and environment systems (planets,
-        // moons, orbital stations).
+        // Init: register overworld (Earth) and orbit dimension + planet; gravity tick
+        // handler.
+        // Init order ensures dimensions and gravity are ready for travel and
+        // environment
+        // systems (planets, moons, orbital stations).
+        OrbitalIndustriesAPI.planetRegistry.register(
+                new Planet("earth", "Earth", 0, 1.0, AtmosphereType.BREATHABLE, 1.0, true, null));
+
         int orbitId = ConfigManager.getOrbitDimensionId();
         OrbitalIndustriesAPI.dimensionRegistry.registerDimension(orbitId, OrbitWorldProvider.class);
         LOG.info("Registered dimension orbit with ID " + orbitId);
 
         OrbitalIndustriesAPI.planetRegistry.register(
-                new Planet("orbit", "Orbit", orbitId, 0.1, false, 0.0));
+                new Planet("orbit", "Orbit", orbitId, 0.1, AtmosphereType.NONE, 0.0, false, null));
         if (OrbitalIndustriesAPI.orbitalEnvironmentManager instanceof OrbitalEnvironmentManagerImpl) {
             ((OrbitalEnvironmentManagerImpl) OrbitalIndustriesAPI.orbitalEnvironmentManager)
                     .registerSpaceDimension(orbitId);
