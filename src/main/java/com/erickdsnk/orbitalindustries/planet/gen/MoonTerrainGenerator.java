@@ -14,6 +14,7 @@ import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.IChunkProvider;
 
+import com.erickdsnk.orbitalindustries.OrbitalIndustriesAPI;
 import com.erickdsnk.orbitalindustries.core.OIModLogger;
 import com.erickdsnk.orbitalindustries.planet.PlanetTerrainGenerator;
 import com.erickdsnk.orbitalindustries.planet.biome.PlanetBiome;
@@ -62,8 +63,13 @@ public class MoonTerrainGenerator implements PlanetTerrainGenerator {
      */
     public MoonTerrainGenerator(List<PlanetBiome> biomes, Map<String, Object> options) {
         if (biomes == null || biomes.size() < 2) {
-            this.biomes = Collections.singletonList(
-                    new PlanetBiome("moon_default", "Lunar Surface", Blocks.end_stone, Blocks.stone, 0.0, 1.0));
+            int mcBiomeId = -1;
+            if (OrbitalIndustriesAPI.biomeRegistry != null) {
+                mcBiomeId = OrbitalIndustriesAPI.biomeRegistry.getOrRegister("moon_default", "Lunar Surface");
+            }
+            PlanetBiome defaultBiome = new PlanetBiome("moon_default", "Lunar Surface",
+                    Blocks.end_stone, Blocks.stone, 0.0, 1.0, mcBiomeId);
+            this.biomes = Collections.singletonList(defaultBiome);
         } else {
             this.biomes = Collections.unmodifiableList(new ArrayList<PlanetBiome>(biomes));
         }
