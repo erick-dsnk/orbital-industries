@@ -57,8 +57,8 @@ public class MoonTerrainGenerator implements PlanetTerrainGenerator {
     private static final int CAVE_MIN_Y = 5;
     /** Cave noise seed offset so cave pattern differs from terrain. */
     private static final long CAVE_NOISE_SEED_OFFSET = 0x6C0789657F4A7C15L;
-    /** Cave noise frequency: lower = larger caverns. */
-    private static final double CAVE_NOISE_FREQ = 0.08;
+    /** Cave noise frequency: lower = larger caverns, higher = narrower passages. */
+    private static final double CAVE_NOISE_FREQ = 0.14;
     /** Threshold below which we carve (0–1); lower = fewer/smaller caves. */
     private static final double CAVE_CARVE_THRESHOLD = 0.38;
     /** Default option for cave generation: 1 = on, 0 = off. */
