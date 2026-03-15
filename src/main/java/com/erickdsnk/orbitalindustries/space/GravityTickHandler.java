@@ -7,6 +7,8 @@ import cpw.mods.fml.common.gameevent.TickEvent.PlayerTickEvent;
 
 import net.minecraft.entity.player.EntityPlayer;
 
+import net.minecraftforge.event.entity.living.LivingFallEvent;
+
 /**
  * Applies per-dimension gravity from Planet data (via GravityManager). Earth =
  * 1.0,
@@ -16,9 +18,9 @@ import net.minecraft.entity.player.EntityPlayer;
  * effect
  * is scaled (e.g. 0.1g in orbit). Runs on both client and server so the player
  * sees
- * reduced gravity locally.
+ * reduced gravity locally. Also scales fall damage by planet gravity.
  *
- * TODO: Fall damage and jump height scaling per planet gravity.
+ * TODO: Jump height scaling per planet gravity.
  */
 public final class GravityTickHandler {
 
@@ -49,5 +51,26 @@ public final class GravityTickHandler {
             // the net change is -VANILLA_GRAVITY_PER_TICK * multiplier (reduced gravity).
             player.motionY += VANILLA_GRAVITY_PER_TICK * (1.0 - multiplier);
         }
+    }
+
+    /**
+     * Scales fall damage by the planet's gravity multiplier so low-gravity
+     * dimensions
+     * (e.g. orbit) inflict proportionally less damage. We scale the fall distance
+     * so the damage formula (based on distance) yields proportionally less damage.
+     * Runs on server only.
+     */
+    @cpw.mods.fml.common.eventhandler.SubscribeEvent
+    public void onLivingFall(LivingFallEvent event) {
+        if (event.entity.worldObj == null || event.entity.worldObj.isRemote)
+            return;
+        if (OrbitalIndustriesAPI.gravityManager == null)
+            return;
+        int dimensionId = event.entity.worldObj.provider.dimensionId;
+        double gravityMultiplier = OrbitalIndustriesAPI.gravityManager.getGravityMultiplier(dimensionId);
+        if (gravityMultiplier >= EARTH_GRAVITY)
+            return;
+        float distance = event.distance;
+        event.distance = (float) (distance * gravityMultiplier);
     }
 }
