@@ -25,13 +25,13 @@ import com.erickdsnk.orbitalindustries.planet.gen.MoonTerrainGenerator;
  * terrain.
  * <p>
  * Chunk coordinate math: chunk (chunkX, chunkZ) covers world X in
- * [chunkX*16, chunkX*16+15] and Z in [chunkZ*16, chunkZ*16+15]. Block index in
- * the flat array: index = x + z*16 + y*256 for local x,z in [0,15], y in
- * [0,255]; array length 16*16*256 = 65536.
+ * [chunkX*16, chunkX*16+15] and Z in [chunkZ*16, chunkZ*16+15]. We use the
+ * chunk's setBlock API (func_150807_a) so block placement matches the Chunk's
+ * internal storage and terrain renders correctly.
  * <p>
- * Future compatibility: the same pattern (block array → terrain → carve →
- * Chunk) can be used for Mars, asteroid fields, gas giant moons, and
- * procedural planets by swapping constants and noise.
+ * Future compatibility: the same pattern (terrain → carve → Chunk) can be used
+ * for Mars, asteroid fields, gas giant moons, and procedural planets by
+ * swapping constants and noise.
  */
 public class MoonChunkProvider implements IChunkProvider {
 
@@ -51,7 +51,6 @@ public class MoonChunkProvider implements IChunkProvider {
 
     private static final int CHUNK_SIZE_XZ = 16;
     private static final int CHUNK_SIZE_Y = 256;
-    private static final int CHUNK_VOLUME = CHUNK_SIZE_XZ * CHUNK_SIZE_XZ * CHUNK_SIZE_Y;
 
     private final World world;
     private final long worldSeed;
@@ -66,13 +65,7 @@ public class MoonChunkProvider implements IChunkProvider {
 
     @Override
     public Chunk provideChunk(int chunkX, int chunkZ) {
-        // Allocate chunk arrays. Index = x + z*16 + y*256 (local x,z 0..15, y 0..255).
-        Block[] blocks = new Block[CHUNK_VOLUME];
-        byte[] metadata = new byte[CHUNK_VOLUME];
-        for (int i = 0; i < CHUNK_VOLUME; i++) {
-            blocks[i] = Blocks.air;
-        }
-
+        Chunk chunk = new Chunk(world, chunkX, chunkZ);
         int baseWorldX = chunkX * CHUNK_SIZE_XZ;
         int baseWorldZ = chunkZ * CHUNK_SIZE_XZ;
 
@@ -100,10 +93,10 @@ public class MoonChunkProvider implements IChunkProvider {
                     stoneTop = 0;
 
                 for (int y = 0; y < stoneTop; y++) {
-                    setBlock(blocks, metadata, localX, y, localZ, STONE, (byte) 0);
+                    chunk.func_150807_a(localX, y, localZ, STONE, 0);
                 }
                 for (int y = stoneTop; y <= surfaceHeight; y++) {
-                    setBlock(blocks, metadata, localX, y, localZ, REGOLITH, (byte) 0);
+                    chunk.func_150807_a(localX, y, localZ, REGOLITH, 0);
                 }
                 topSurfaceY[localX][localZ] = surfaceHeight;
             }
@@ -111,24 +104,10 @@ public class MoonChunkProvider implements IChunkProvider {
 
         // 2) Crater carving: 3x3 chunk neighborhood, deterministic from world seed.
         List<CraterInfo> craters = collectCraters(chunkX, chunkZ);
-        applyCraters(blocks, metadata, baseWorldX, baseWorldZ, craters, topSurfaceY);
+        applyCraters(chunk, baseWorldX, baseWorldZ, craters, topSurfaceY);
 
-        Chunk chunk = new Chunk(world, blocks, metadata, chunkX, chunkZ);
         chunk.generateSkylightMap();
         return chunk;
-    }
-
-    /**
-     * Block index for chunk arrays: x + z*16 + y*256 (local coordinates).
-     */
-    private static int index(int x, int y, int z) {
-        return x + (z << 4) + (y << 8);
-    }
-
-    private static void setBlock(Block[] blocks, byte[] metadata, int x, int y, int z, Block block, byte meta) {
-        int i = index(x, y, z);
-        blocks[i] = block;
-        metadata[i] = meta;
     }
 
     /**
@@ -159,10 +138,10 @@ public class MoonChunkProvider implements IChunkProvider {
     }
 
     /**
-     * Carve bowl-shaped craters into the block array and add a 1-block rim.
+     * Carve bowl-shaped craters into the chunk and add a 1-block rim.
      * Uses distSq for inside/rim check; sqrt only when computing bowl depth.
      */
-    private void applyCraters(Block[] blocks, byte[] metadata, int baseWorldX, int baseWorldZ,
+    private void applyCraters(Chunk chunk, int baseWorldX, int baseWorldZ,
             List<CraterInfo> craters, int[][] topSurfaceY) {
         for (int localX = 0; localX < CHUNK_SIZE_XZ; localX++) {
             for (int localZ = 0; localZ < CHUNK_SIZE_XZ; localZ++) {
@@ -193,15 +172,13 @@ public class MoonChunkProvider implements IChunkProvider {
                 for (int d = 0; d < maxDepth; d++) {
                     int y = surfaceY - d;
                     if (y >= 0) {
-                        int i = index(localX, y, localZ);
-                        blocks[i] = Blocks.air;
-                        metadata[i] = 0;
+                        chunk.func_150807_a(localX, y, localZ, Blocks.air, 0);
                     }
                 }
                 if (inRim && maxDepth == 0) {
                     int rimY = surfaceY + CRATER_RIM_HEIGHT;
                     if (rimY < CHUNK_SIZE_Y) {
-                        setBlock(blocks, metadata, localX, rimY, localZ, REGOLITH, (byte) 0);
+                        chunk.func_150807_a(localX, rimY, localZ, REGOLITH, 0);
                     }
                 }
             }
