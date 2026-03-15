@@ -1,0 +1,31 @@
+{
+  "id": "moon",
+  "name": "Moon",
+  "dimensionId": -40,
+  "terrainGenerator": "moon",
+  "gravity": 0.16,
+  "atmosphere": "NONE",
+  "generatorOptions": {
+    "baseSurfaceY": 64,
+    "craterChancePerChunk": 3
+  },
+  "biomes": [
+    {
+      "id": "moon_smooth_plains",
+      "displayName": "Smooth Plains",
+      "surfaceBlock": "minecraft:end_stone",
+      "stoneBlock": "minecraft:stone",
+      "terrainHeightModifier": 0.0,
+      "craterProbabilityModifier": 0.4
+    },
+    {
+      "id": "moon_crater_highlands",
+      "displayName": "Crater Highlands",
+      "surfaceBlock": "minecraft:end_stone",
+      "stoneBlock": "minecraft:stone",
+      "terrainHeightModifier": 4.0,
+      "craterProbabilityModifier": 2.0
+    }
+  ],
+  "structures": []
+}
