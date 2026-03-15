@@ -95,7 +95,7 @@ public class MoonTerrainGenerator implements PlanetTerrainGenerator {
                 }
                 Block stone = biome != null ? biome.getStoneBlock() : getStoneBlock();
                 Block surface = biome != null ? biome.getSurfaceBlock() : getSurfaceBlock();
-                double heightMod = biome != null ? biome.getTerrainHeightModifier() : 0.0;
+                double heightMod = getSmoothedHeightModifier(provider, wx, wz);
                 if (biome != null) {
                     biomeIdsInChunk.add(biome.getId());
                 }
@@ -132,6 +132,24 @@ public class MoonTerrainGenerator implements PlanetTerrainGenerator {
         chunk.setBiomeArray(biomeArray);
 
         LOG.debug("Chunk " + chunkX + "," + chunkZ + " biomes: " + biomeIdsInChunk);
+    }
+
+    /**
+     * Average terrain height modifier over a 5x5 neighborhood so biome boundaries
+     * blend smoothly instead of creating a sudden step in elevation.
+     */
+    private double getSmoothedHeightModifier(PlanetBiomeProvider provider, int wx, int wz) {
+        final int radius = 2;
+        double sum = 0.0;
+        int count = 0;
+        for (int dz = -radius; dz <= radius; dz++) {
+            for (int dx = -radius; dx <= radius; dx++) {
+                PlanetBiome b = provider.getBiomeAt(wx + dx, wz + dz);
+                sum += b != null ? b.getTerrainHeightModifier() : 0.0;
+                count++;
+            }
+        }
+        return count > 0 ? sum / count : 0.0;
     }
 
     // --- Procedural noise (interpolated value noise for smooth terrain) ---
