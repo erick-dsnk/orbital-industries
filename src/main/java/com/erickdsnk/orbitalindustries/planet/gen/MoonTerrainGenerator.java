@@ -36,13 +36,6 @@ public class MoonTerrainGenerator implements PlanetTerrainGenerator {
 
     private static final OIModLogger LOG = new OIModLogger("MoonTerrainGenerator");
 
-    /** Example moon biome: higher terrain, more craters. */
-    public static final PlanetBiome CRATERED_HIGHLANDS = new PlanetBiome("moon_cratered_highlands",
-            "Cratered Highlands", Blocks.end_stone, Blocks.stone, 3.0, 1.8);
-    /** Example moon biome: flatter terrain, fewer craters. */
-    public static final PlanetBiome SMOOTH_PLAINS = new PlanetBiome("moon_smooth_plains", "Smooth Plains",
-            Blocks.end_stone, Blocks.stone, -1.0, 0.4);
-
     private static final int BASE_SURFACE_Y = 64;
     /**
      * Terrain noise amplitude: height variation in blocks. Kept modest so the
@@ -125,6 +118,19 @@ public class MoonTerrainGenerator implements PlanetTerrainGenerator {
 
         List<Crater> craters = collectCratersInNeighborhood(seed, chunkX, chunkZ, provider);
         applyCratersToChunk(chunk, provider, baseWorldX, baseWorldZ, craters, topSurfaceY);
+
+        byte[] biomeArray = new byte[256];
+        for (int localZ = 0; localZ < 16; localZ++) {
+            for (int localX = 0; localX < 16; localX++) {
+                PlanetBiome biome = provider.getBiomeAt(baseWorldX + localX, baseWorldZ + localZ);
+                int id = (biome != null && biome.getMinecraftBiomeId() >= 0)
+                        ? biome.getMinecraftBiomeId()
+                        : 0;
+                biomeArray[localZ * 16 + localX] = (byte) (id & 0xFF);
+            }
+        }
+        chunk.setBiomeArray(biomeArray);
+
         LOG.debug("Chunk " + chunkX + "," + chunkZ + " biomes: " + biomeIdsInChunk);
     }
 
