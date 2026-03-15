@@ -1,6 +1,7 @@
 package com.erickdsnk.orbitalindustries;
 
 import com.erickdsnk.orbitalindustries.dimension.DimensionRegistry;
+import com.erickdsnk.orbitalindustries.environment.EnvironmentManager;
 import com.erickdsnk.orbitalindustries.environment.OxygenSystem;
 import com.erickdsnk.orbitalindustries.environment.VacuumDamageHandler;
 import com.erickdsnk.orbitalindustries.planet.PlanetManager;
@@ -16,11 +17,13 @@ import com.erickdsnk.orbitalindustries.transport.TeleportManager;
  */
 public final class OrbitalIndustriesAPI {
 
-    private OrbitalIndustriesAPI() {}
+    private OrbitalIndustriesAPI() {
+    }
 
     public static DimensionRegistry dimensionRegistry;
     public static PlanetRegistry planetRegistry;
     public static PlanetManager planetManager;
+    public static EnvironmentManager environmentManager;
     public static OrbitalEnvironmentManager orbitalEnvironmentManager;
     public static GravityManager gravityManager;
     public static AtmosphereManager atmosphereManager;
