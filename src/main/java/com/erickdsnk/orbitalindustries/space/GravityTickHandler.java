@@ -8,25 +8,34 @@ import cpw.mods.fml.common.gameevent.TickEvent.PlayerTickEvent;
 import net.minecraft.entity.player.EntityPlayer;
 
 /**
- * Applies per-dimension gravity by scaling player vertical motion each tick.
- * Earth = 1.0, orbit = 0.1 (from GravityManager / Planet data). Runs on server
- * only.
+ * Applies per-dimension gravity from Planet data (via GravityManager). Earth =
+ * 1.0,
+ * orbit = 0.1. Runs at tick START so our adjustment is applied before vanilla
+ * gravity;
+ * we add a positive offset so that when vanilla subtracts its gravity, the net
+ * effect
+ * is scaled (e.g. 0.1g in orbit). Runs on both client and server so the player
+ * sees
+ * reduced gravity locally.
  *
- * TODO: More accurate physics (fall damage, jump height) and integration with
- * GravityManager/Planet config; this is a placeholder for low-gravity feel.
+ * TODO: Fall damage and jump height scaling per planet gravity.
  */
 public final class GravityTickHandler {
+
+    /**
+     * Vanilla gravity applied to motionY per tick when falling (approx. 0.08 in
+     * 1.7.10).
+     */
+    private static final double VANILLA_GRAVITY_PER_TICK = 0.08;
 
     private static final double EARTH_GRAVITY = 1.0;
 
     @cpw.mods.fml.common.eventhandler.SubscribeEvent
     public void onPlayerTick(PlayerTickEvent event) {
-        if (event.phase != TickEvent.Phase.END)
+        if (event.phase != TickEvent.Phase.START)
             return;
         EntityPlayer player = event.player;
-        if (player.worldObj == null || player.worldObj.isRemote)
-            return;
-        if (OrbitalIndustriesAPI.gravityManager == null)
+        if (player.worldObj == null || OrbitalIndustriesAPI.gravityManager == null)
             return;
 
         int dimensionId = player.worldObj.provider.dimensionId;
@@ -34,8 +43,11 @@ public final class GravityTickHandler {
         if (multiplier >= EARTH_GRAVITY)
             return;
 
-        // Placeholder: scale vertical motion by gravity so low-gravity dimensions feel
-        // floaty.
-        player.motionY *= multiplier;
+        // Only scale when player is in air; on ground vanilla handles motionY.
+        if (!player.onGround) {
+            // Pre-adjust so that when vanilla subtracts VANILLA_GRAVITY_PER_TICK this tick,
+            // the net change is -VANILLA_GRAVITY_PER_TICK * multiplier (reduced gravity).
+            player.motionY += VANILLA_GRAVITY_PER_TICK * (1.0 - multiplier);
+        }
     }
 }
