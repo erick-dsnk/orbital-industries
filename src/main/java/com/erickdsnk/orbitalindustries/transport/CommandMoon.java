@@ -10,6 +10,7 @@ import net.minecraft.world.WorldServer;
 
 import com.erickdsnk.orbitalindustries.OrbitalIndustriesAPI;
 import com.erickdsnk.orbitalindustries.core.ConfigManager;
+import com.erickdsnk.orbitalindustries.planet.Planet;
 import com.erickdsnk.orbitalindustries.core.OIModLogger;
 import com.erickdsnk.orbitalindustries.util.PositionUtils;
 
@@ -39,7 +40,8 @@ public class CommandMoon extends CommandBase {
         if (player == null) {
             return;
         }
-        int dimensionId = ConfigManager.getMoonDimensionId();
+        Planet moon = OrbitalIndustriesAPI.planetRegistry.getPlanet("moon");
+        int dimensionId = moon != null ? moon.getDimensionId() : ConfigManager.getMoonDimensionId();
         net.minecraft.server.MinecraftServer server = FMLCommonHandler.instance().getMinecraftServerInstance();
         if (server == null) {
             return;
