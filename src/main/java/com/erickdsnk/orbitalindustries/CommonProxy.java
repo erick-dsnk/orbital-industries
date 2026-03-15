@@ -14,9 +14,14 @@ import com.erickdsnk.orbitalindustries.registry.ItemRegistry;
 import com.erickdsnk.orbitalindustries.space.impl.AtmosphereManagerImpl;
 import com.erickdsnk.orbitalindustries.space.impl.GravityManagerImpl;
 import com.erickdsnk.orbitalindustries.space.impl.OrbitalEnvironmentManagerImpl;
+import com.erickdsnk.orbitalindustries.transport.CommandOrbit;
 import com.erickdsnk.orbitalindustries.transport.LaunchManager;
 import com.erickdsnk.orbitalindustries.transport.TeleportManager;
+import com.erickdsnk.orbitalindustries.dimension.OrbitWorldProvider;
+import com.erickdsnk.orbitalindustries.planet.Planet;
+import com.erickdsnk.orbitalindustries.space.GravityTickHandler;
 
+import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.common.event.FMLInitializationEvent;
 import cpw.mods.fml.common.event.FMLPostInitializationEvent;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
@@ -29,8 +34,8 @@ public class CommonProxy {
     public void preInit(FMLPreInitializationEvent event) {
         ConfigManager.load(event.getSuggestedConfigurationFile());
         LOG.info("ConfigManager loaded");
-        OrbitalIndustries.LOG.info(ConfigManager.getGreeting());
-        OrbitalIndustries.LOG.info("I am OrbitalIndustries at version " + Tags.VERSION);
+        LOG.info(ConfigManager.getGreeting());
+        LOG.info("I am OrbitalIndustries at version " + Tags.VERSION);
 
         BlockRegistry.registerBlocks();
         LOG.info("BlockRegistry initialized");
@@ -62,13 +67,38 @@ public class CommonProxy {
     }
 
     public void init(FMLInitializationEvent event) {
-        // TODO: Register concrete dimensions via DimensionRegistry when planets/dimensions are defined
-        LOG.info("DimensionRegistry ready");
+        // Init: register orbit dimension and planet; gravity tick handler. Init order
+        // ensures
+        // dimensions and gravity are ready for travel and environment systems (planets,
+        // moons, orbital stations).
+        int orbitId = ConfigManager.getOrbitDimensionId();
+        OrbitalIndustriesAPI.dimensionRegistry.registerDimension(orbitId, OrbitWorldProvider.class);
+        LOG.info("Registered dimension orbit with ID " + orbitId);
+
+        OrbitalIndustriesAPI.planetRegistry.register(
+                new Planet("orbit", "Orbit", orbitId, 0.1, false, 0.0));
+        if (OrbitalIndustriesAPI.orbitalEnvironmentManager instanceof OrbitalEnvironmentManagerImpl) {
+            ((OrbitalEnvironmentManagerImpl) OrbitalIndustriesAPI.orbitalEnvironmentManager)
+                    .registerSpaceDimension(orbitId);
+        }
+
+        FMLCommonHandler.instance().bus().register(new GravityTickHandler());
+        LOG.info("Gravity tick handler registered");
+
         PacketHandler.registerPackets();
         LOG.info("PacketHandler ready");
     }
 
-    public void postInit(FMLPostInitializationEvent event) {}
+    public void postInit(FMLPostInitializationEvent event) {
+        int orbitId = ConfigManager.getOrbitDimensionId();
+        boolean dimOk = net.minecraftforge.common.DimensionManager.isDimensionRegistered(orbitId);
+        double gravity = OrbitalIndustriesAPI.gravityManager.getGravityMultiplier(orbitId);
+        if (dimOk && Math.abs(gravity - 0.1) < 0.001) {
+            LOG.info("Space dimension framework validated: orbit dim " + orbitId + ", gravity " + gravity);
+        }
+    }
 
-    public void serverStarting(FMLServerStartingEvent event) {}
+    public void serverStarting(FMLServerStartingEvent event) {
+        event.registerServerCommand(new CommandOrbit());
+    }
 }
