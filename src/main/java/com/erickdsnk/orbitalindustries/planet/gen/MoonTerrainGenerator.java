@@ -31,10 +31,10 @@ public class MoonTerrainGenerator implements PlanetTerrainGenerator {
 
     private static final int BASE_SURFACE_Y = 64;
     /**
-     * Terrain noise amplitude: height variation in blocks. Moon has rolling
-     * highlands and lowlands, not a flat plane.
+     * Terrain noise amplitude: height variation in blocks. Kept modest so the
+     * moon has gentle rolling highlands and lowlands, not steep peaks.
      */
-    private static final double TERRAIN_NOISE_AMPLITUDE = 32.0;
+    private static final double TERRAIN_NOISE_AMPLITUDE = 8.0;
     private static final int MIN_REGOLITH_LAYERS = 1;
     private static final int MAX_REGOLITH_LAYERS = 3;
     private static final int CRATER_CHANCE_PER_CHUNK = 3;
@@ -82,10 +82,10 @@ public class MoonTerrainGenerator implements PlanetTerrainGenerator {
     // --- Procedural noise (interpolated value noise for smooth terrain) ---
 
     /**
-     * Terrain noise frequency: wide hills but clearly visible variation across
-     * chunks (lower = wider, higher = more detail).
+     * Terrain noise frequency: low value gives wide, gentle hills (lower =
+     * wider and smoother, higher = more detail and steeper).
      */
-    private static final double TERRAIN_NOISE_FREQ = 0.065;
+    private static final double TERRAIN_NOISE_FREQ = 0.028;
     /** Regolith noise frequency (independent pattern). */
     private static final double REGOLITH_NOISE_FREQ = 0.04;
     /** Seed offset for regolith channel so it differs from terrain. */
@@ -138,10 +138,10 @@ public class MoonTerrainGenerator implements PlanetTerrainGenerator {
      */
     public static double terrainNoise(long seed, double wx, double wz) {
         double wide = (valueNoise2D(seed, wx * TERRAIN_NOISE_FREQ * 0.35, wz * TERRAIN_NOISE_FREQ * 0.35) * 2.0 - 1.0)
-                * 0.35;
-        double main = (valueNoise2D(seed + 1, wx * TERRAIN_NOISE_FREQ, wz * TERRAIN_NOISE_FREQ) * 2.0 - 1.0) * 0.45;
+                * 0.55;
+        double main = (valueNoise2D(seed + 1, wx * TERRAIN_NOISE_FREQ, wz * TERRAIN_NOISE_FREQ) * 2.0 - 1.0) * 0.30;
         double detail = (valueNoise2D(seed + 2, wx * TERRAIN_NOISE_FREQ * 2.2, wz * TERRAIN_NOISE_FREQ * 2.2) * 2.0
-                - 1.0) * 0.25;
+                - 1.0) * 0.15;
         double n = wide + main + detail;
         return Math.max(-1.0, Math.min(1.0, n));
     }
