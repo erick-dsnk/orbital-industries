@@ -24,6 +24,10 @@ import com.erickdsnk.orbitalindustries.dimension.OrbitWorldProvider;
 import com.erickdsnk.orbitalindustries.planet.gen.MoonTerrainGenerator;
 import com.erickdsnk.orbitalindustries.planet.AtmosphereType;
 import com.erickdsnk.orbitalindustries.planet.Planet;
+import com.erickdsnk.orbitalindustries.planet.biome.PlanetBiome;
+
+import java.util.Arrays;
+import java.util.List;
 import com.erickdsnk.orbitalindustries.space.GravityTickHandler;
 
 import cpw.mods.fml.common.FMLCommonHandler;
@@ -98,9 +102,12 @@ public class CommonProxy {
         int moonId = ConfigManager.getMoonDimensionId();
         OrbitalIndustriesAPI.dimensionRegistry.registerDimension(moonId, MoonWorldProvider.class);
         LOG.info("Moon dimension registered with ID " + moonId);
+        List<PlanetBiome> moonBiomes = Arrays.<PlanetBiome>asList(
+                MoonTerrainGenerator.CRATERED_HIGHLANDS,
+                MoonTerrainGenerator.SMOOTH_PLAINS);
         OrbitalIndustriesAPI.planetRegistry.register(
                 new Planet("moon", "Moon", moonId, 0.16, AtmosphereType.NONE, 0.25, true, earth,
-                        new MoonTerrainGenerator()));
+                        new MoonTerrainGenerator(moonBiomes), moonBiomes));
         LOG.info("Moon planet registered with dimension id " + moonId);
 
         GravityTickHandler gravityHandler = new GravityTickHandler();
