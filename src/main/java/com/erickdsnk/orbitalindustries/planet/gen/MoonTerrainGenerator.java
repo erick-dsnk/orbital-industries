@@ -22,8 +22,10 @@ import com.erickdsnk.orbitalindustries.planet.biome.PlanetBiomeProvider;
 
 /**
  * Terrain generator for the Moon: rolling highlands and lowlands (multi-octave
- * noise), stone base, endstone/regolith surface, and crater generation. Surface
- * height varies so the landscape is not flat apart from craters. Uses
+ * noise), stone base, endstone/regolith surface, crater generation, and 3D
+ * noise-based cave carving. Surface height varies so the landscape is not flat
+ * apart from craters. Caves carve through stone and regolith (lunar lava-tube
+ * style). Uses
  * {@link PlanetBiomeProvider} for planet-specific biomes (e.g.
  * cratered_highlands,
  * smooth_plains) with different height and crater density.
@@ -51,15 +53,28 @@ public class MoonTerrainGenerator implements PlanetTerrainGenerator {
     /** Rim height in blocks; real craters have a raised ejecta rim. */
     private static final int CRATER_RIM_HEIGHT = 1;
 
+    /** Minimum Y for cave carving (avoid breaking bedrock layer). */
+    private static final int CAVE_MIN_Y = 5;
+    /** Cave noise seed offset so cave pattern differs from terrain. */
+    private static final long CAVE_NOISE_SEED_OFFSET = 0x6C0789657F4A7C15L;
+    /** Cave noise frequency: lower = larger caverns. */
+    private static final double CAVE_NOISE_FREQ = 0.08;
+    /** Threshold below which we carve (0–1); lower = fewer/smaller caves. */
+    private static final double CAVE_CARVE_THRESHOLD = 0.38;
+    /** Default option for cave generation: 1 = on, 0 = off. */
+    private static final int DEFAULT_CAVE_ENABLED = 1;
+
     private final List<PlanetBiome> biomes;
     private final int baseSurfaceY;
     private final int craterChancePerChunk;
+    private final boolean caveEnabled;
 
     /**
      * Constructor with biome list and options from JSON. Use default single moon
      * biome if biomes is null or size &lt; 2.
      *
-     * @param options may contain "baseSurfaceY" (int), "craterChancePerChunk" (int)
+     * @param options may contain "baseSurfaceY" (int), "craterChancePerChunk"
+     *                (int), "caveEnabled" (int, 1 or 0)
      */
     public MoonTerrainGenerator(List<PlanetBiome> biomes, Map<String, Object> options) {
         if (biomes == null || biomes.size() < 2) {
@@ -75,6 +90,7 @@ public class MoonTerrainGenerator implements PlanetTerrainGenerator {
         }
         this.baseSurfaceY = getIntOption(options, "baseSurfaceY", DEFAULT_BASE_SURFACE_Y);
         this.craterChancePerChunk = getIntOption(options, "craterChancePerChunk", DEFAULT_CRATER_CHANCE_PER_CHUNK);
+        this.caveEnabled = getIntOption(options, "caveEnabled", DEFAULT_CAVE_ENABLED) != 0;
     }
 
     /**
@@ -145,6 +161,10 @@ public class MoonTerrainGenerator implements PlanetTerrainGenerator {
 
         List<Crater> craters = collectCratersInNeighborhood(seed, chunkX, chunkZ, provider);
         applyCratersToChunk(chunk, provider, baseWorldX, baseWorldZ, craters, topSurfaceY);
+
+        if (caveEnabled) {
+            generateCaves(chunk, baseWorldX, baseWorldZ, seed, topSurfaceY);
+        }
 
         byte[] biomeArray = new byte[256];
         for (int localZ = 0; localZ < 16; localZ++) {
@@ -228,6 +248,88 @@ public class MoonTerrainGenerator implements PlanetTerrainGenerator {
         // Use long literal so 0x7FFF_FFFFL + 1 does not overflow (int would become
         // Integer.MIN_VALUE).
         return ((h ^ (h >>> 33)) & 0x7FFF_FFFFL) / (double) (0x7FFF_FFFFL + 1L);
+    }
+
+    /** Deterministic 3D lattice hash; returns [0, 1). */
+    private static double latticeHash3D(long seed, int ix, int iy, int iz) {
+        long h = seed + (long) ix * 374761393L + (long) iy * 668265263L + (long) iz * 1103515245L;
+        h = (h ^ (h >>> 33)) * 0xff51afd7ed558ccdL;
+        h = (h ^ (h >>> 33)) * 0xc4ceb9fe1a85ec53L;
+        return ((h ^ (h >>> 33)) & 0x7FFF_FFFFL) / (double) (0x7FFF_FFFFL + 1L);
+    }
+
+    /**
+     * Smooth 3D value noise for cave carving. Returns value in [0, 1].
+     * Uses trilinear interpolation with smoothstep for continuous caves.
+     */
+    private static double valueNoise3D(long seed, double x, double y, double z) {
+        int ix = (int) Math.floor(x);
+        int iy = (int) Math.floor(y);
+        int iz = (int) Math.floor(z);
+        double fx = x - ix;
+        double fy = y - iy;
+        double fz = z - iz;
+        double sx = smoothstep(fx);
+        double sy = smoothstep(fy);
+        double sz = smoothstep(fz);
+
+        double v000 = latticeHash3D(seed, ix, iy, iz);
+        double v100 = latticeHash3D(seed, ix + 1, iy, iz);
+        double v010 = latticeHash3D(seed, ix, iy + 1, iz);
+        double v110 = latticeHash3D(seed, ix + 1, iy + 1, iz);
+        double v001 = latticeHash3D(seed, ix, iy, iz + 1);
+        double v101 = latticeHash3D(seed, ix + 1, iy, iz + 1);
+        double v011 = latticeHash3D(seed, ix, iy + 1, iz + 1);
+        double v111 = latticeHash3D(seed, ix + 1, iy + 1, iz + 1);
+
+        double a00 = v000 + sx * (v100 - v000);
+        double a10 = v010 + sx * (v110 - v010);
+        double a01 = v001 + sx * (v101 - v001);
+        double a11 = v011 + sx * (v111 - v011);
+        double b0 = a00 + sy * (a10 - a00);
+        double b1 = a01 + sy * (a11 - a01);
+        return b0 + sz * (b1 - b0);
+    }
+
+    /**
+     * Cave density noise: two octaves for larger caverns plus finer detail.
+     * Returns value in [0, 1]. Carve when below CAVE_CARVE_THRESHOLD.
+     */
+    private static double caveNoise(long seed, double wx, double wy, double wz) {
+        double scale = CAVE_NOISE_FREQ;
+        double large = valueNoise3D(seed + CAVE_NOISE_SEED_OFFSET, wx * scale * 0.5, wy * scale * 0.5,
+                wz * scale * 0.5);
+        double main = valueNoise3D(seed + CAVE_NOISE_SEED_OFFSET + 1, wx * scale, wy * scale, wz * scale);
+        double detail = valueNoise3D(seed + CAVE_NOISE_SEED_OFFSET + 2, wx * scale * 2.0, wy * scale * 2.0,
+                wz * scale * 2.0);
+        return large * 0.5 + main * 0.35 + detail * 0.15;
+    }
+
+    /**
+     * Carve caves into the chunk using 3D noise. Only replaces stone (and
+     * surface/regolith) so craters and terrain shape are preserved; caves
+     * open to the surface where they intersect the regolith layer.
+     */
+    private void generateCaves(Chunk chunk, int baseWorldX, int baseWorldZ, long seed, int[][] topSurfaceY) {
+        Block stone = getStoneBlock();
+        Block surface = getSurfaceBlock();
+        for (int localX = 0; localX < 16; localX++) {
+            for (int localZ = 0; localZ < 16; localZ++) {
+                int wx = baseWorldX + localX;
+                int wz = baseWorldZ + localZ;
+                int surfaceY = topSurfaceY[localX][localZ];
+                for (int y = CAVE_MIN_Y; y <= surfaceY + 2; y++) {
+                    Block block = chunk.getBlock(localX, y, localZ);
+                    if (block != stone && block != surface) {
+                        continue;
+                    }
+                    double n = caveNoise(seed, wx, y, wz);
+                    if (n < CAVE_CARVE_THRESHOLD) {
+                        chunk.func_150807_a(localX, y, localZ, Blocks.air, 0);
+                    }
+                }
+            }
+        }
     }
 
     /**
