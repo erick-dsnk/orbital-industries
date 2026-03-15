@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.Random;
 
@@ -36,15 +37,11 @@ public class MoonTerrainGenerator implements PlanetTerrainGenerator {
 
     private static final OIModLogger LOG = new OIModLogger("MoonTerrainGenerator");
 
-    private static final int BASE_SURFACE_Y = 64;
-    /**
-     * Terrain noise amplitude: height variation in blocks. Kept modest so the
-     * moon has gentle rolling highlands and lowlands, not steep peaks.
-     */
+    private static final int DEFAULT_BASE_SURFACE_Y = 64;
     private static final double TERRAIN_NOISE_AMPLITUDE = 8.0;
     private static final int MIN_REGOLITH_LAYERS = 1;
     private static final int MAX_REGOLITH_LAYERS = 3;
-    private static final int CRATER_CHANCE_PER_CHUNK = 3;
+    private static final int DEFAULT_CRATER_CHANCE_PER_CHUNK = 3;
     private static final int MAX_CRATER_RADIUS = 6;
     private static final int MIN_CRATER_RADIUS = 2;
     /** Maximum depth (blocks) at crater center; bowl shape so rim is shallow. */
@@ -54,26 +51,50 @@ public class MoonTerrainGenerator implements PlanetTerrainGenerator {
     private static final int CRATER_RIM_HEIGHT = 1;
 
     private final List<PlanetBiome> biomes;
+    private final int baseSurfaceY;
+    private final int craterChancePerChunk;
 
     /**
-     * Constructor with biome list; use default single moon biome if null or size
-     * &lt; 2.
+     * Constructor with biome list and options from JSON. Use default single moon
+     * biome if biomes is null or size &lt; 2.
+     *
+     * @param options may contain "baseSurfaceY" (int), "craterChancePerChunk" (int)
      */
-    public MoonTerrainGenerator(List<PlanetBiome> biomes) {
+    public MoonTerrainGenerator(List<PlanetBiome> biomes, Map<String, Object> options) {
         if (biomes == null || biomes.size() < 2) {
             this.biomes = Collections.singletonList(
                     new PlanetBiome("moon_default", "Lunar Surface", Blocks.end_stone, Blocks.stone, 0.0, 1.0));
         } else {
             this.biomes = Collections.unmodifiableList(new ArrayList<PlanetBiome>(biomes));
         }
+        this.baseSurfaceY = getIntOption(options, "baseSurfaceY", DEFAULT_BASE_SURFACE_Y);
+        this.craterChancePerChunk = getIntOption(options, "craterChancePerChunk", DEFAULT_CRATER_CHANCE_PER_CHUNK);
+    }
+
+    /**
+     * Constructor with biome list only; uses default options.
+     */
+    public MoonTerrainGenerator(List<PlanetBiome> biomes) {
+        this(biomes, null);
     }
 
     /**
      * No-arg constructor for backward compatibility; uses single default moon
-     * biome.
+     * biome and default options.
      */
     public MoonTerrainGenerator() {
-        this(null);
+        this(null, null);
+    }
+
+    private static int getIntOption(Map<String, Object> options, String key, int defaultValue) {
+        if (options == null || !options.containsKey(key)) {
+            return defaultValue;
+        }
+        Object v = options.get(key);
+        if (v instanceof Number) {
+            return ((Number) v).intValue();
+        }
+        return defaultValue;
     }
 
     @Override
@@ -99,7 +120,7 @@ public class MoonTerrainGenerator implements PlanetTerrainGenerator {
                 if (biome != null) {
                     biomeIdsInChunk.add(biome.getId());
                 }
-                int baseSurfaceY = BASE_SURFACE_Y
+                int baseSurfaceY = this.baseSurfaceY
                         + (int) Math.round(terrainNoise(seed, wx, wz) * TERRAIN_NOISE_AMPLITUDE)
                         + (int) Math.round(heightMod);
                 int regolithLayers = regolithLayersAt(seed, wx, wz);
@@ -256,7 +277,7 @@ public class MoonTerrainGenerator implements PlanetTerrainGenerator {
                         modifier = centerBiome.getCraterProbabilityModifier();
                     }
                 }
-                int maxCraters = Math.max(0, (int) Math.ceil((CRATER_CHANCE_PER_CHUNK + 1) * modifier));
+                int maxCraters = Math.max(0, (int) Math.ceil((craterChancePerChunk + 1) * modifier));
                 int numCraters = maxCraters > 0 ? rng.nextInt(maxCraters) : 0;
                 int baseNx = nc * 16;
                 int baseNz = nz * 16;
