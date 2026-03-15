@@ -98,6 +98,14 @@ public final class PlanetLoader {
                     try {
                         PlanetConfig config = GSON.fromJson(new FileReader(file), PlanetConfig.class);
                         if (config != null && config.id != null && !config.id.isEmpty()) {
+                            // If config doesn't define biomes, keep biomes from resource defaults so
+                            // partial overrides (e.g. generatorOptions only) don't wipe them out.
+                            PlanetConfig existing = byId.get(config.id);
+                            if (existing != null
+                                    && (config.biomes == null || config.biomes.isEmpty())
+                                    && existing.biomes != null && !existing.biomes.isEmpty()) {
+                                config.biomes = existing.biomes;
+                            }
                             byId.put(config.id, config);
                             LOG.info("Loaded planet from config: " + file.getName() + " (id=" + config.id + ")");
                         }
