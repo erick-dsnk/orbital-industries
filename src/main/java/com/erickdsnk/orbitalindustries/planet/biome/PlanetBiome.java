@@ -32,15 +32,27 @@ public final class PlanetBiome {
      * 2.0 = double).
      */
     private final double craterProbabilityModifier;
+    /**
+     * Minecraft biome ID for this planet biome; used to fill the chunk's biome
+     * array so F3 and other systems show the correct name. -1 if not registered
+     * with Minecraft.
+     */
+    private final int minecraftBiomeId;
 
     public PlanetBiome(String id, String displayName, Block surfaceBlock, Block stoneBlock,
             double terrainHeightModifier, double craterProbabilityModifier) {
+        this(id, displayName, surfaceBlock, stoneBlock, terrainHeightModifier, craterProbabilityModifier, -1);
+    }
+
+    public PlanetBiome(String id, String displayName, Block surfaceBlock, Block stoneBlock,
+            double terrainHeightModifier, double craterProbabilityModifier, int minecraftBiomeId) {
         this.id = id;
         this.displayName = displayName;
         this.surfaceBlock = surfaceBlock;
         this.stoneBlock = stoneBlock;
         this.terrainHeightModifier = terrainHeightModifier;
         this.craterProbabilityModifier = craterProbabilityModifier;
+        this.minecraftBiomeId = minecraftBiomeId;
     }
 
     public String getId() {
@@ -65,5 +77,12 @@ public final class PlanetBiome {
 
     public double getCraterProbabilityModifier() {
         return craterProbabilityModifier;
+    }
+
+    /**
+     * Minecraft biome ID for chunk biome array and F3 display; -1 if not set.
+     */
+    public int getMinecraftBiomeId() {
+        return minecraftBiomeId;
     }
 }
