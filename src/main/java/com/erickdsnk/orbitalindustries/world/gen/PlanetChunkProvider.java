@@ -15,7 +15,6 @@ import net.minecraft.world.chunk.IChunkProvider;
 import com.erickdsnk.orbitalindustries.OrbitalIndustriesAPI;
 import com.erickdsnk.orbitalindustries.planet.Planet;
 import com.erickdsnk.orbitalindustries.planet.structure.StructureEntry;
-import com.erickdsnk.orbitalindustries.planet.structure.PlanetStructureRegistry;
 
 /**
  * Generic chunk provider for all data-driven planet dimensions. Delegates
