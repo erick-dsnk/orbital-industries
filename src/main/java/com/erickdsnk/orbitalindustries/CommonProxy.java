@@ -100,7 +100,9 @@ public class CommonProxy {
         TerrainFeatureRegistry.register("caves", new CaveFeature());
         LOG.info("Terrain features registered");
 
-        // 2. Register terrain generator factories (before loading planet JSON)
+        // 2. Register terrain generator factories (before loading planet JSON).
+        // Planet JSONs supply terrainGenerator id and generatorOptions (including
+        // "features"); createGenerator receives those options when planets are loaded.
         PlanetTerrainRegistry.registerFactory("noisy_surface", new PlanetTerrainGeneratorFactory() {
             @Override
             public PlanetTerrainGenerator create(List<PlanetBiome> biomes, Map<String, Object> options) {
@@ -112,11 +114,17 @@ public class CommonProxy {
                 return new ModularTerrainGenerator(base, featureIds, biomes, options);
             }
         });
+        // Backward compat: "moon" = noisy_surface with default features when not in
+        // options
         PlanetTerrainRegistry.registerFactory("moon", new PlanetTerrainGeneratorFactory() {
             @Override
             public PlanetTerrainGenerator create(List<PlanetBiome> biomes, Map<String, Object> options) {
                 NoisySurfaceTerrainGenerator base = new NoisySurfaceTerrainGenerator(biomes, options);
-                return new ModularTerrainGenerator(base, Arrays.asList("craters", "caves"), biomes, options);
+                List<String> featureIds = ModularTerrainGenerator.parseFeatureIds(options);
+                if (featureIds.isEmpty()) {
+                    featureIds = Arrays.asList("craters", "caves");
+                }
+                return new ModularTerrainGenerator(base, featureIds, biomes, options);
             }
         });
         LOG.info("Terrain generator factories registered");
