@@ -34,5 +34,7 @@
  * For more details, see https://docs.gradle.org/8.0.1/userguide/java_library_plugin.html#sec:java_library_configurations_graph
  */
 dependencies {
+    // Forge provides at runtime; needed for compile/IDE resolution of org.apache.logging.log4j
+    compileOnly("org.apache.logging.log4j:log4j-api:2.0.2")
     //runtimeOnlyNonPublishable("com.github.GTNewHorizons:NotEnoughItems:2.7.69-GTNH:dev")
 }
