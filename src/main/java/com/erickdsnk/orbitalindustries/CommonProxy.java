@@ -16,16 +16,16 @@ import com.erickdsnk.orbitalindustries.space.impl.AtmosphereManagerImpl;
 import com.erickdsnk.orbitalindustries.space.impl.GravityManagerImpl;
 import com.erickdsnk.orbitalindustries.space.impl.OrbitalEnvironmentManagerImpl;
 import com.erickdsnk.orbitalindustries.transport.CommandMoon;
-import com.erickdsnk.orbitalindustries.transport.CommandOrbit;
+import com.erickdsnk.orbitalindustries.transport.CommandOverworld;
 import com.erickdsnk.orbitalindustries.transport.LaunchManager;
 import com.erickdsnk.orbitalindustries.transport.TeleportManager;
-import com.erickdsnk.orbitalindustries.dimension.OrbitWorldProvider;
 import com.erickdsnk.orbitalindustries.planet.gen.MoonTerrainGenerator;
 import com.erickdsnk.orbitalindustries.planet.gen.PlanetTerrainGeneratorFactory;
 import com.erickdsnk.orbitalindustries.planet.gen.PlanetTerrainRegistry;
 import com.erickdsnk.orbitalindustries.planet.PlanetLoader;
 import com.erickdsnk.orbitalindustries.planet.PlanetTerrainGenerator;
 import com.erickdsnk.orbitalindustries.planet.biome.PlanetBiome;
+import com.erickdsnk.orbitalindustries.planet.biome.PlanetBiomeRegistry;
 import com.erickdsnk.orbitalindustries.planet.structure.NoOpStructureGenerator;
 import com.erickdsnk.orbitalindustries.planet.structure.PlanetStructureRegistry;
 
@@ -85,6 +85,8 @@ public class CommonProxy {
         LOG.info("OxygenSystem initialized");
         OrbitalIndustriesAPI.structureRegistry = new PlanetStructureRegistry();
         LOG.info("StructureRegistry initialized");
+        OrbitalIndustriesAPI.biomeRegistry = new PlanetBiomeRegistry();
+        LOG.info("BiomeRegistry initialized");
     }
 
     public void init(FMLInitializationEvent event) {
@@ -139,5 +141,6 @@ public class CommonProxy {
 
     public void serverStarting(FMLServerStartingEvent event) {
         event.registerServerCommand(new CommandMoon());
+        event.registerServerCommand(new CommandOverworld());
     }
 }
