@@ -2,6 +2,7 @@ package com.erickdsnk.orbitalindustries.world.gen;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Random;
 
 import net.minecraft.entity.EnumCreatureType;
 import net.minecraft.world.biome.BiomeGenBase;
@@ -11,14 +12,17 @@ import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.IChunkProvider;
 
+import com.erickdsnk.orbitalindustries.OrbitalIndustriesAPI;
 import com.erickdsnk.orbitalindustries.planet.Planet;
-import com.erickdsnk.orbitalindustries.planet.PlanetTerrainGenerator;
+import com.erickdsnk.orbitalindustries.planet.structure.StructureEntry;
+import com.erickdsnk.orbitalindustries.planet.structure.PlanetStructureRegistry;
 
 /**
- * Chunk provider for planet dimensions. Holds a reference to the planet and
- * delegates terrain generation to {@link Planet#getTerrainGenerator()}. Used by
- * {@link com.erickdsnk.orbitalindustries.world.dimension.PlanetDimensionProvider}
- * via planet.createChunkProvider(world).
+ * Generic chunk provider for all data-driven planet dimensions. Delegates
+ * terrain generation to the planet's
+ * {@link com.erickdsnk.orbitalindustries.planet.PlanetTerrainGenerator}
+ * and runs structure placement from the planet's structure list during
+ * populate.
  */
 public class PlanetChunkProvider implements IChunkProvider {
 
@@ -32,27 +36,29 @@ public class PlanetChunkProvider implements IChunkProvider {
 
     @Override
     public Chunk provideChunk(int chunkX, int chunkZ) {
-        PlanetTerrainGenerator generator = planet != null ? planet.getTerrainGenerator() : null;
-        if (generator == null) {
-            return createEmptyChunk(chunkX, chunkZ);
+        Chunk chunk = new Chunk(world, chunkX, chunkZ);
+        if (planet.getTerrainGenerator() != null) {
+            planet.getTerrainGenerator().generateTerrain(world, chunk, chunkX, chunkZ);
         }
-        Chunk chunk = new Chunk(world, chunkX, chunkZ);
-        generator.generateTerrain(world, chunk, chunkX, chunkZ);
-        chunk.generateSkylightMap();
-        return chunk;
-    }
-
-    private Chunk createEmptyChunk(int chunkX, int chunkZ) {
-        Chunk chunk = new Chunk(world, chunkX, chunkZ);
         chunk.generateSkylightMap();
         return chunk;
     }
 
     @Override
     public void populate(IChunkProvider chunkProvider, int chunkX, int chunkZ) {
-        PlanetTerrainGenerator generator = planet != null ? planet.getTerrainGenerator() : null;
-        if (generator != null) {
-            generator.populate(chunkProvider, world, chunkX, chunkZ);
+        if (planet.getTerrainGenerator() != null) {
+            planet.getTerrainGenerator().populate(this, world, chunkX, chunkZ);
+        }
+        List<StructureEntry> structures = planet.getStructures();
+        if (structures != null && OrbitalIndustriesAPI.structureRegistry != null) {
+            Random rng = new Random(world.getSeed());
+            long seed = rng.nextLong() * (long) chunkX + rng.nextLong() * (long) chunkZ ^ world.getSeed();
+            rng.setSeed(seed);
+            for (StructureEntry entry : structures) {
+                if (rng.nextDouble() < entry.getChancePerChunk()) {
+                    OrbitalIndustriesAPI.structureRegistry.generate(entry.getType(), world, chunkX, chunkZ, rng, entry);
+                }
+            }
         }
     }
 
@@ -68,7 +74,6 @@ public class PlanetChunkProvider implements IChunkProvider {
 
     @Override
     public void recreateStructures(int chunkX, int chunkZ) {
-        // No structures
     }
 
     @Override
@@ -88,7 +93,7 @@ public class PlanetChunkProvider implements IChunkProvider {
 
     @Override
     public String makeString() {
-        return "PlanetChunkProvider";
+        return "PlanetChunkProvider[" + (planet != null ? planet.getId() : "null") + "]";
     }
 
     @Override
@@ -108,6 +113,5 @@ public class PlanetChunkProvider implements IChunkProvider {
 
     @Override
     public void saveExtraData() {
-        // No extra data
     }
 }
