@@ -125,7 +125,9 @@ public class MoonTerrainGenerator implements PlanetTerrainGenerator {
         long h = seed + (long) ix * 374761393L + (long) iz * 668265263L;
         h = (h ^ (h >>> 33)) * 0xff51afd7ed558ccdL;
         h = (h ^ (h >>> 33)) * 0xc4ceb9fe1a85ec53L;
-        return ((h ^ (h >>> 33)) & 0x7FFF_FFFF) / (double) (0x7FFF_FFFF + 1);
+        // Use long literal so 0x7FFF_FFFFL + 1 does not overflow (int would become
+        // Integer.MIN_VALUE).
+        return ((h ^ (h >>> 33)) & 0x7FFF_FFFFL) / (double) (0x7FFF_FFFFL + 1L);
     }
 
     /**
