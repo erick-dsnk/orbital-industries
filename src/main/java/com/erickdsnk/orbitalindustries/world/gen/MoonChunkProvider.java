@@ -20,19 +20,19 @@ import com.erickdsnk.orbitalindustries.planet.gen.MoonTerrainGenerator;
 /**
  * Chunk provider for the Moon dimension. Generates full terrain from y=0 up to
  * a noise-derived surface, fills with stone and regolith, carves craters, and
- * builds chunks from block arrays. This fully replaces Minecraft's default
- * overworld generator for the Moon so the mod has complete control over
- * terrain.
+ * builds chunks from block arrays.
  * <p>
- * Chunk coordinate math: chunk (chunkX, chunkZ) covers world X in
- * [chunkX*16, chunkX*16+15] and Z in [chunkZ*16, chunkZ*16+15]. We use the
- * chunk's setBlock API (func_150807_a) so block placement matches the Chunk's
- * internal storage and terrain renders correctly.
- * <p>
- * Future compatibility: the same pattern (terrain → carve → Chunk) can be used
- * for Mars, asteroid fields, gas giant moons, and procedural planets by
- * swapping constants and noise.
+ * <strong>Deprecated:</strong> The canonical path is
+ * {@link PlanetChunkProvider}
+ * delegating to
+ * {@link com.erickdsnk.orbitalindustries.planet.PlanetTerrainGenerator}
+ * (e.g.
+ * {@link com.erickdsnk.orbitalindustries.planet.gen.MoonTerrainGenerator}).
+ * Planet dimensions now use that pipeline; this class is kept only for
+ * reference
+ * or legacy use.
  */
+@Deprecated
 public class MoonChunkProvider implements IChunkProvider {
 
     // --- Terrain constants (match MoonTerrainGenerator for consistent look) ---
