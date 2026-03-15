@@ -25,9 +25,12 @@ import com.erickdsnk.orbitalindustries.planet.gen.MoonTerrainGenerator;
 import com.erickdsnk.orbitalindustries.planet.AtmosphereType;
 import com.erickdsnk.orbitalindustries.planet.Planet;
 import com.erickdsnk.orbitalindustries.planet.biome.PlanetBiome;
+import com.erickdsnk.orbitalindustries.planet.biome.PlanetBiomeGenBase;
 
 import java.util.Arrays;
 import java.util.List;
+
+import net.minecraft.init.Blocks;
 import com.erickdsnk.orbitalindustries.space.GravityTickHandler;
 
 import cpw.mods.fml.common.FMLCommonHandler;
@@ -102,9 +105,17 @@ public class CommonProxy {
         int moonId = ConfigManager.getMoonDimensionId();
         OrbitalIndustriesAPI.dimensionRegistry.registerDimension(moonId, MoonWorldProvider.class);
         LOG.info("Moon dimension registered with ID " + moonId);
+
+        final int MOON_BIOME_CRATERED_ID = 40;
+        final int MOON_BIOME_SMOOTH_ID = 41;
+        new PlanetBiomeGenBase(MOON_BIOME_CRATERED_ID, "Cratered Highlands");
+        new PlanetBiomeGenBase(MOON_BIOME_SMOOTH_ID, "Smooth Plains");
+
         List<PlanetBiome> moonBiomes = Arrays.<PlanetBiome>asList(
-                MoonTerrainGenerator.CRATERED_HIGHLANDS,
-                MoonTerrainGenerator.SMOOTH_PLAINS);
+                new PlanetBiome("moon_cratered_highlands", "Cratered Highlands", Blocks.end_stone, Blocks.stone,
+                        3.0, 1.8, MOON_BIOME_CRATERED_ID),
+                new PlanetBiome("moon_smooth_plains", "Smooth Plains", Blocks.end_stone, Blocks.stone,
+                        -1.0, 0.4, MOON_BIOME_SMOOTH_ID));
         OrbitalIndustriesAPI.planetRegistry.register(
                 new Planet("moon", "Moon", moonId, 0.16, AtmosphereType.NONE, 0.25, true, earth,
                         new MoonTerrainGenerator(moonBiomes), moonBiomes));
