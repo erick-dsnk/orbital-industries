@@ -1,7 +1,10 @@
 package com.erickdsnk.orbitalindustries.planet.gen;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.Random;
 
 import net.minecraft.block.Block;
@@ -10,24 +13,35 @@ import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.IChunkProvider;
 
+import com.erickdsnk.orbitalindustries.core.OIModLogger;
 import com.erickdsnk.orbitalindustries.planet.PlanetTerrainGenerator;
+import com.erickdsnk.orbitalindustries.planet.biome.PlanetBiome;
+import com.erickdsnk.orbitalindustries.planet.biome.PlanetBiomeProvider;
 
 /**
  * Terrain generator for the Moon: rolling highlands and lowlands (multi-octave
  * noise), stone base, endstone/regolith surface, and crater generation. Surface
- * height varies so the landscape is not flat apart from craters.
+ * height varies so the landscape is not flat apart from craters. Uses
+ * {@link PlanetBiomeProvider} for planet-specific biomes (e.g.
+ * cratered_highlands,
+ * smooth_plains) with different height and crater density.
  * <p>
- * The Moon dimension uses
- * {@link com.erickdsnk.orbitalindustries.world.gen.MoonChunkProvider}
- * for full chunk generation; this class provides shared noise
- * ({@link #terrainNoise},
- * {@link #regolithLayersAt}) and remains for the planet abstraction and other
- * dimensions.
- * <p>
- * This system will later support Mars, asteroid belts, gas giants, procedural
- * planets, and different biome systems; this class is kept simple for now.
+ * This system will later support Mars canyon systems (biome-driven height and
+ * structure hooks), asteroid field variation (biome as asteroid type), ice
+ * worlds
+ * (ice/snow/rock biomes), and gas giant moons (each dimension with its own
+ * planet and biome list).
  */
 public class MoonTerrainGenerator implements PlanetTerrainGenerator {
+
+    private static final OIModLogger LOG = new OIModLogger("MoonTerrainGenerator");
+
+    /** Example moon biome: higher terrain, more craters. */
+    public static final PlanetBiome CRATERED_HIGHLANDS = new PlanetBiome("moon_cratered_highlands",
+            "Cratered Highlands", Blocks.end_stone, Blocks.stone, 3.0, 1.8);
+    /** Example moon biome: flatter terrain, fewer craters. */
+    public static final PlanetBiome SMOOTH_PLAINS = new PlanetBiome("moon_smooth_plains", "Smooth Plains",
+            Blocks.end_stone, Blocks.stone, -1.0, 0.4);
 
     private static final int BASE_SURFACE_Y = 64;
     /**
@@ -46,21 +60,55 @@ public class MoonTerrainGenerator implements PlanetTerrainGenerator {
     /** Rim height in blocks; real craters have a raised ejecta rim. */
     private static final int CRATER_RIM_HEIGHT = 1;
 
+    private final List<PlanetBiome> biomes;
+
+    /**
+     * Constructor with biome list; use default single moon biome if null or size
+     * &lt; 2.
+     */
+    public MoonTerrainGenerator(List<PlanetBiome> biomes) {
+        if (biomes == null || biomes.size() < 2) {
+            this.biomes = Collections.singletonList(
+                    new PlanetBiome("moon_default", "Lunar Surface", Blocks.end_stone, Blocks.stone, 0.0, 1.0));
+        } else {
+            this.biomes = Collections.unmodifiableList(new ArrayList<PlanetBiome>(biomes));
+        }
+    }
+
+    /**
+     * No-arg constructor for backward compatibility; uses single default moon
+     * biome.
+     */
+    public MoonTerrainGenerator() {
+        this(null);
+    }
+
     @Override
     public void generateTerrain(World world, Chunk chunk, int chunkX, int chunkZ) {
-        Block stone = getStoneBlock();
-        Block surface = getSurfaceBlock();
         long seed = world.getSeed();
         int baseWorldX = chunkX * 16;
         int baseWorldZ = chunkZ * 16;
+        PlanetBiomeProvider provider = new PlanetBiomeProvider(seed, biomes);
 
         int[][] topSurfaceY = new int[16][16];
+        Set<String> biomeIdsInChunk = new HashSet<String>();
         for (int localX = 0; localX < 16; localX++) {
             for (int localZ = 0; localZ < 16; localZ++) {
                 int wx = baseWorldX + localX;
                 int wz = baseWorldZ + localZ;
+                PlanetBiome biome = provider.getBiomeAt(wx, wz);
+                if (biome == null) {
+                    biome = biomes.isEmpty() ? null : biomes.get(0);
+                }
+                Block stone = biome != null ? biome.getStoneBlock() : getStoneBlock();
+                Block surface = biome != null ? biome.getSurfaceBlock() : getSurfaceBlock();
+                double heightMod = biome != null ? biome.getTerrainHeightModifier() : 0.0;
+                if (biome != null) {
+                    biomeIdsInChunk.add(biome.getId());
+                }
                 int baseSurfaceY = BASE_SURFACE_Y
-                        + (int) Math.round(terrainNoise(seed, wx, wz) * TERRAIN_NOISE_AMPLITUDE);
+                        + (int) Math.round(terrainNoise(seed, wx, wz) * TERRAIN_NOISE_AMPLITUDE)
+                        + (int) Math.round(heightMod);
                 int regolithLayers = regolithLayersAt(seed, wx, wz);
                 int topY = baseSurfaceY + regolithLayers - 1;
                 topSurfaceY[localX][localZ] = topY;
@@ -75,8 +123,9 @@ public class MoonTerrainGenerator implements PlanetTerrainGenerator {
             }
         }
 
-        List<Crater> craters = collectCratersInNeighborhood(seed, chunkX, chunkZ);
-        applyCratersToChunk(chunk, surface, baseWorldX, baseWorldZ, craters, topSurfaceY);
+        List<Crater> craters = collectCratersInNeighborhood(seed, chunkX, chunkZ, provider);
+        applyCratersToChunk(chunk, provider, baseWorldX, baseWorldZ, craters, topSurfaceY);
+        LOG.debug("Chunk " + chunkX + "," + chunkZ + " biomes: " + biomeIdsInChunk);
     }
 
     // --- Procedural noise (interpolated value noise for smooth terrain) ---
@@ -162,8 +211,11 @@ public class MoonTerrainGenerator implements PlanetTerrainGenerator {
      * 3x3 chunk neighborhood so craters centered in a neighbor chunk still get
      * carved into this chunk where they overlap. Craters are placed in world
      * coordinates so the same crater is generated consistently from any chunk.
+     * Uses the biome at each neighbor chunk center to scale crater count via
+     * craterProbabilityModifier.
      */
-    private List<Crater> collectCratersInNeighborhood(long worldSeed, int chunkX, int chunkZ) {
+    private List<Crater> collectCratersInNeighborhood(long worldSeed, int chunkX, int chunkZ,
+            PlanetBiomeProvider provider) {
         List<Crater> list = new ArrayList<Crater>();
         for (int dcx = -1; dcx <= 1; dcx++) {
             for (int dcz = -1; dcz <= 1; dcz++) {
@@ -171,9 +223,19 @@ public class MoonTerrainGenerator implements PlanetTerrainGenerator {
                 int nz = chunkZ + dcz;
                 long seed = worldSeed + (long) nc * 341873128712L + (long) nz * 132897987541L;
                 Random rng = new Random(seed);
+                int centerX = nc * 16 + 8;
+                int centerZ = nz * 16 + 8;
+                double modifier = 1.0;
+                if (provider != null) {
+                    PlanetBiome centerBiome = provider.getBiomeAt(centerX, centerZ);
+                    if (centerBiome != null) {
+                        modifier = centerBiome.getCraterProbabilityModifier();
+                    }
+                }
+                int maxCraters = Math.max(0, (int) Math.ceil((CRATER_CHANCE_PER_CHUNK + 1) * modifier));
+                int numCraters = maxCraters > 0 ? rng.nextInt(maxCraters) : 0;
                 int baseNx = nc * 16;
                 int baseNz = nz * 16;
-                int numCraters = rng.nextInt(CRATER_CHANCE_PER_CHUNK + 1);
                 for (int i = 0; i < numCraters; i++) {
                     int cwx = baseNx + rng.nextInt(16);
                     int cwz = baseNz + rng.nextInt(16);
@@ -189,17 +251,18 @@ public class MoonTerrainGenerator implements PlanetTerrainGenerator {
     /**
      * Apply all craters to the current chunk using world coordinates. For each
      * block in the chunk we compute the max depth from any overlapping crater
-     * (bowl shape), then carve. Rim is applied where we're just outside a crater.
-     * Uses squared distance to avoid Math.sqrt in the inner loop; sqrt only when
-     * inside a crater for the bowl profile.
+     * (bowl shape), then carve. Rim is applied where we're just outside a crater;
+     * surface block comes from the biome at that column.
      */
-    private void applyCratersToChunk(Chunk chunk, Block surfaceBlock, int baseWorldX, int baseWorldZ,
+    private void applyCratersToChunk(Chunk chunk, PlanetBiomeProvider provider, int baseWorldX, int baseWorldZ,
             List<Crater> craters, int[][] topSurfaceY) {
         for (int localX = 0; localX < 16; localX++) {
             for (int localZ = 0; localZ < 16; localZ++) {
                 int wx = baseWorldX + localX;
                 int wz = baseWorldZ + localZ;
                 int surfaceY = topSurfaceY[localX][localZ];
+                PlanetBiome biome = provider != null ? provider.getBiomeAt(wx, wz) : null;
+                Block surfaceBlock = biome != null ? biome.getSurfaceBlock() : getSurfaceBlock();
 
                 int maxDepth = 0;
                 boolean inRim = false;
