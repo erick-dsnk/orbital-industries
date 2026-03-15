@@ -3,6 +3,8 @@ package com.erickdsnk.orbitalindustries.planet.biome;
 import java.util.Collections;
 import java.util.List;
 
+import com.erickdsnk.orbitalindustries.planet.gen.NoiseUtils;
+
 /**
  * Selects a {@link PlanetBiome} at world (x, z) using a simple noise-based
  * scheme. Uses deterministic 2D value noise so biome boundaries are stable for
@@ -55,7 +57,8 @@ public final class PlanetBiomeProvider {
         if (biomes.isEmpty()) {
             return null;
         }
-        double n = valueNoise2D(worldSeed + BIOME_NOISE_SEED_OFFSET, x * BIOME_NOISE_FREQ, z * BIOME_NOISE_FREQ);
+        double n = NoiseUtils.valueNoise2D(worldSeed + BIOME_NOISE_SEED_OFFSET, x * BIOME_NOISE_FREQ,
+                z * BIOME_NOISE_FREQ);
         int index = (int) (n * biomes.size()) % biomes.size();
         if (index < 0) {
             index += biomes.size();
@@ -79,37 +82,4 @@ public final class PlanetBiomeProvider {
         return grid;
     }
 
-    /**
-     * Deterministic 2D value noise in [0, 1). Lattice hash with bilinear
-     * interpolation for smooth biome boundaries.
-     */
-    private static double valueNoise2D(long seed, double x, double z) {
-        int ix = (int) Math.floor(x);
-        int iz = (int) Math.floor(z);
-        double fx = x - ix;
-        double fz = z - iz;
-        double sx = smoothstep(fx);
-        double sz = smoothstep(fz);
-
-        double v00 = latticeHash(seed, ix, iz);
-        double v10 = latticeHash(seed, ix + 1, iz);
-        double v01 = latticeHash(seed, ix, iz + 1);
-        double v11 = latticeHash(seed, ix + 1, iz + 1);
-
-        double a = v00 + sx * (v10 - v00);
-        double b = v01 + sx * (v11 - v01);
-        return a + sz * (b - a);
-    }
-
-    private static double smoothstep(double t) {
-        t = Math.max(0, Math.min(1, t));
-        return t * t * (3.0 - 2.0 * t);
-    }
-
-    private static double latticeHash(long seed, int ix, int iz) {
-        long h = seed + (long) ix * 374761393L + (long) iz * 668265263L;
-        h = (h ^ (h >>> 33)) * 0xff51afd7ed558ccdL;
-        h = (h ^ (h >>> 33)) * 0xc4ceb9fe1a85ec53L;
-        return ((h ^ (h >>> 33)) & 0x7FFF_FFFFL) / (double) (0x7FFF_FFFFL + 1L);
-    }
 }
