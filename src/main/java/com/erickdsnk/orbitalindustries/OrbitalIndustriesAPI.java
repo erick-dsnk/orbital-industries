@@ -6,6 +6,7 @@ import com.erickdsnk.orbitalindustries.environment.OxygenSystem;
 import com.erickdsnk.orbitalindustries.environment.VacuumDamageHandler;
 import com.erickdsnk.orbitalindustries.planet.PlanetManager;
 import com.erickdsnk.orbitalindustries.planet.PlanetRegistry;
+import com.erickdsnk.orbitalindustries.planet.structure.PlanetStructureRegistry;
 import com.erickdsnk.orbitalindustries.space.AtmosphereManager;
 import com.erickdsnk.orbitalindustries.space.GravityManager;
 import com.erickdsnk.orbitalindustries.space.OrbitalEnvironmentManager;
@@ -31,4 +32,5 @@ public final class OrbitalIndustriesAPI {
     public static TeleportManager teleportManager;
     public static VacuumDamageHandler vacuumDamageHandler;
     public static OxygenSystem oxygenSystem;
+    public static PlanetStructureRegistry structureRegistry;
 }
