@@ -19,9 +19,13 @@ import com.erickdsnk.orbitalindustries.transport.CommandMoon;
 import com.erickdsnk.orbitalindustries.transport.CommandOverworld;
 import com.erickdsnk.orbitalindustries.transport.LaunchManager;
 import com.erickdsnk.orbitalindustries.transport.TeleportManager;
-import com.erickdsnk.orbitalindustries.planet.gen.MoonTerrainGenerator;
+import com.erickdsnk.orbitalindustries.planet.gen.ModularTerrainGenerator;
+import com.erickdsnk.orbitalindustries.planet.gen.NoisySurfaceTerrainGenerator;
 import com.erickdsnk.orbitalindustries.planet.gen.PlanetTerrainGeneratorFactory;
 import com.erickdsnk.orbitalindustries.planet.gen.PlanetTerrainRegistry;
+import com.erickdsnk.orbitalindustries.planet.gen.feature.CaveFeature;
+import com.erickdsnk.orbitalindustries.planet.gen.feature.CraterFeature;
+import com.erickdsnk.orbitalindustries.planet.gen.feature.TerrainFeatureRegistry;
 import com.erickdsnk.orbitalindustries.planet.PlanetLoader;
 import com.erickdsnk.orbitalindustries.planet.PlanetTerrainGenerator;
 import com.erickdsnk.orbitalindustries.planet.biome.PlanetBiome;
@@ -29,6 +33,7 @@ import com.erickdsnk.orbitalindustries.planet.biome.PlanetBiomeRegistry;
 import com.erickdsnk.orbitalindustries.planet.structure.NoOpStructureGenerator;
 import com.erickdsnk.orbitalindustries.planet.structure.PlanetStructureRegistry;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import com.erickdsnk.orbitalindustries.planet.AtmosphereType;
@@ -90,16 +95,33 @@ public class CommonProxy {
     }
 
     public void init(FMLInitializationEvent event) {
-        // 1. Register terrain generator factories (before loading planet JSON)
+        // 1. Register terrain features (before terrain generator factories)
+        TerrainFeatureRegistry.register("craters", new CraterFeature());
+        TerrainFeatureRegistry.register("caves", new CaveFeature());
+        LOG.info("Terrain features registered");
+
+        // 2. Register terrain generator factories (before loading planet JSON)
+        PlanetTerrainRegistry.registerFactory("noisy_surface", new PlanetTerrainGeneratorFactory() {
+            @Override
+            public PlanetTerrainGenerator create(List<PlanetBiome> biomes, Map<String, Object> options) {
+                NoisySurfaceTerrainGenerator base = new NoisySurfaceTerrainGenerator(biomes, options);
+                List<String> featureIds = ModularTerrainGenerator.parseFeatureIds(options);
+                if (featureIds.isEmpty()) {
+                    return base;
+                }
+                return new ModularTerrainGenerator(base, featureIds, biomes, options);
+            }
+        });
         PlanetTerrainRegistry.registerFactory("moon", new PlanetTerrainGeneratorFactory() {
             @Override
             public PlanetTerrainGenerator create(List<PlanetBiome> biomes, Map<String, Object> options) {
-                return new MoonTerrainGenerator(biomes, options);
+                NoisySurfaceTerrainGenerator base = new NoisySurfaceTerrainGenerator(biomes, options);
+                return new ModularTerrainGenerator(base, Arrays.asList("craters", "caves"), biomes, options);
             }
         });
         LOG.info("Terrain generator factories registered");
 
-        // 2. Register structure types (placeholders; implement real generators as
+        // 3. Register structure types (placeholders; implement real generators as
         // needed)
         OrbitalIndustriesAPI.structureRegistry.register("abandoned_shelter", new NoOpStructureGenerator());
         LOG.info("Structure types registered");
@@ -108,11 +130,11 @@ public class CommonProxy {
         PlanetLoader.loadPlanets();
         LOG.info("Planet configs loaded");
 
-        // 4. Register Earth in registry (not from JSON)
+        // 5. Register Earth in registry (not from JSON)
         OrbitalIndustriesAPI.planetRegistry.register(new Planet("earth", "Earth", 0, null, null, 1.0,
                 AtmosphereType.BREATHABLE, 1.0, true));
 
-        // 5. Register dimensions for all planets that have a terrain generator
+        // 6. Register dimensions for all planets that have a terrain generator
         // (data-driven)
         for (Planet planet : OrbitalIndustriesAPI.planetRegistry.getPlanets()) {
             if (planet.getDimensionId() != 0 && planet.getTerrainGenerator() != null) {
