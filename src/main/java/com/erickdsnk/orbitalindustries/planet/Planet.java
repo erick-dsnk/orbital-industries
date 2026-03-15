@@ -1,5 +1,10 @@
 package com.erickdsnk.orbitalindustries.planet;
 
+import java.util.Collections;
+import java.util.List;
+
+import com.erickdsnk.orbitalindustries.planet.biome.PlanetBiome;
+
 /**
  * Immutable data object representing a celestial body. No game logic; used by
  * PlanetRegistry,
@@ -24,9 +29,16 @@ public final class Planet {
     private final boolean hasSurface;
     private final Planet parent;
     private final PlanetTerrainGenerator terrainGenerator;
+    private final List<PlanetBiome> biomes;
 
     public Planet(String id, String name, int dimensionId, double gravity, AtmosphereType atmosphere,
             double orbitalDistance, boolean hasSurface, Planet parent, PlanetTerrainGenerator terrainGenerator) {
+        this(id, name, dimensionId, gravity, atmosphere, orbitalDistance, hasSurface, parent, terrainGenerator, null);
+    }
+
+    public Planet(String id, String name, int dimensionId, double gravity, AtmosphereType atmosphere,
+            double orbitalDistance, boolean hasSurface, Planet parent, PlanetTerrainGenerator terrainGenerator,
+            List<PlanetBiome> biomes) {
         this.id = id;
         this.name = name;
         this.dimensionId = dimensionId;
@@ -36,6 +48,9 @@ public final class Planet {
         this.hasSurface = hasSurface;
         this.parent = parent;
         this.terrainGenerator = terrainGenerator;
+        this.biomes = biomes == null || biomes.isEmpty()
+                ? Collections.<PlanetBiome>emptyList()
+                : Collections.unmodifiableList(biomes);
     }
 
     public String getId() {
@@ -82,5 +97,14 @@ public final class Planet {
      */
     public PlanetTerrainGenerator getTerrainGenerator() {
         return terrainGenerator;
+    }
+
+    /**
+     * Unmodifiable list of biomes for this planet. Empty for planets that do not
+     * define biomes (e.g. overworld, orbit). Planets register their biomes when
+     * constructed (e.g. Moon with cratered_highlands and smooth_plains).
+     */
+    public List<PlanetBiome> getBiomes() {
+        return biomes;
     }
 }
