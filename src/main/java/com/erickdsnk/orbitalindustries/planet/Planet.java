@@ -6,6 +6,7 @@ import java.util.List;
 import net.minecraft.world.World;
 
 import com.erickdsnk.orbitalindustries.planet.biome.PlanetBiome;
+import com.erickdsnk.orbitalindustries.planet.structure.StructureEntry;
 import com.erickdsnk.orbitalindustries.world.gen.PlanetChunkProvider;
 
 /**
@@ -29,20 +30,22 @@ public final class Planet {
     private final AtmosphereType atmosphere;
     private final double orbitalDistance;
     private final boolean hasSurface;
+    private final List<PlanetBiome> biomes;
+    private final List<StructureEntry> structures;
 
     /**
-     * Build a planet from JSON-loaded or code-registered data. For JSON planets,
+     * Full constructor for JSON-loaded or code-registered data. For JSON planets,
      * terrainGenerator is resolved via
      * {@link com.erickdsnk.orbitalindustries.planet.gen.PlanetTerrainRegistry}.
      *
-     * @param gravity         default 0.16 if not specified in JSON
-     * @param atmosphere      default NONE if not specified
-     * @param orbitalDistance optional, default 0.0
-     * @param hasSurface      optional, default true when terrainGenerator != null
+     * @param biomes     unmodifiable list of biomes for this dimension; may be
+     *                   empty
+     * @param structures unmodifiable list of structure entries; may be null or
+     *                   empty
      */
     public Planet(String id, String name, int dimensionId, String terrainGeneratorId,
             PlanetTerrainGenerator terrainGenerator, double gravity, AtmosphereType atmosphere,
-            double orbitalDistance, boolean hasSurface) {
+            double orbitalDistance, boolean hasSurface, List<PlanetBiome> biomes, List<StructureEntry> structures) {
         this.id = id;
         this.name = name;
         this.dimensionId = dimensionId;
@@ -52,11 +55,29 @@ public final class Planet {
         this.atmosphere = atmosphere == null ? AtmosphereType.NONE : atmosphere;
         this.orbitalDistance = orbitalDistance;
         this.hasSurface = hasSurface;
+        this.biomes = biomes == null ? Collections.<PlanetBiome>emptyList() : biomes;
+        this.structures = structures == null ? null : structures;
+    }
+
+    /**
+     * Build a planet from JSON-loaded or code-registered data (no
+     * biomes/structures).
+     *
+     * @param gravity         default 0.16 if not specified in JSON
+     * @param atmosphere      default NONE if not specified
+     * @param orbitalDistance optional, default 0.0
+     * @param hasSurface      optional, default true when terrainGenerator != null
+     */
+    public Planet(String id, String name, int dimensionId, String terrainGeneratorId,
+            PlanetTerrainGenerator terrainGenerator, double gravity, AtmosphereType atmosphere,
+            double orbitalDistance, boolean hasSurface) {
+        this(id, name, dimensionId, terrainGeneratorId, terrainGenerator, gravity, atmosphere,
+                orbitalDistance, hasSurface, Collections.<PlanetBiome>emptyList(), null);
     }
 
     /**
      * Shorthand for planets with no orbital/surface flags (e.g. from JSON).
-     * hasSurface is true when terrainGenerator is non-null.
+     * hasSurface is true when terrainGenerator is non-null. No biomes/structures.
      */
     public Planet(String id, String name, int dimensionId, String terrainGeneratorId,
             PlanetTerrainGenerator terrainGenerator, double gravity, AtmosphereType atmosphere) {
@@ -115,10 +136,18 @@ public final class Planet {
     }
 
     /**
-     * Unmodifiable list of biomes; empty for JSON-backed planets (generator may
-     * define its own).
+     * Unmodifiable list of biomes for this dimension. May be empty if not
+     * configured (generator may use its own defaults).
      */
     public List<PlanetBiome> getBiomes() {
-        return Collections.emptyList();
+        return biomes;
+    }
+
+    /**
+     * Unmodifiable list of structure entries for this dimension. Null if not
+     * configured.
+     */
+    public List<StructureEntry> getStructures() {
+        return structures;
     }
 }
