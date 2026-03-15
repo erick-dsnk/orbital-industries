@@ -2,13 +2,14 @@
   "id": "moon",
   "name": "Moon",
   "dimensionId": -40,
-  "terrainGenerator": "moon",
+  "terrainGenerator": "noisy_surface",
   "gravity": 0.16,
   "atmosphere": "NONE",
   "generatorOptions": {
     "baseSurfaceY": 64,
     "craterChancePerChunk": 3,
-    "caveEnabled": 1
+    "caveEnabled": 1,
+    "features": ["craters", "caves"]
   },
   "biomes": [
     {
