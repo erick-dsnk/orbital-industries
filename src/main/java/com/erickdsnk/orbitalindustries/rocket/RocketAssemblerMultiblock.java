@@ -5,7 +5,8 @@ import java.util.List;
 /**
  * Placeholder for the rocket assembler multiblock. Eventually will detect parts
  * in the world and build a blueprint; for now only builds from a given list of
- * parts.
+ * parts. Use {@link RocketPartRegistry#getPartsByIds} to resolve data-driven
+ * part ids to {@link RocketPart} instances.
  */
 public final class RocketAssemblerMultiblock {
 
