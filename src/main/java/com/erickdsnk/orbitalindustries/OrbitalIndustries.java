@@ -19,11 +19,15 @@ public class OrbitalIndustries {
     @SidedProxy(clientSide = "com.erickdsnk.orbitalindustries.ClientProxy", serverSide = "com.erickdsnk.orbitalindustries.CommonProxy")
     public static CommonProxy proxy;
 
+    /** Mod instance for entity registration and other FML APIs. */
+    public static OrbitalIndustries instance;
+
     @Mod.EventHandler
     // preInit "Run before anything else. Read your config, create blocks, items,
     // etc, and register them with the
     // GameRegistry." (Remove if not needed)
     public void preInit(FMLPreInitializationEvent event) {
+        instance = this;
         LOG.info("Orbital Industries architecture initializing");
         proxy.preInit(event);
     }
