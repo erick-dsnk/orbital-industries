@@ -30,4 +30,9 @@ public final class BlockDefinition {
     public String harvestTool;
     /** Harvest level (0 = wood, 1 = stone, 2 = iron, 3 = diamond). Default 0. */
     public Integer harvestLevel;
+    /**
+     * Display name shown in-game. If omitted, derived from id (e.g. moon_basalt →
+     * Moon Basalt).
+     */
+    public String displayName;
 }
