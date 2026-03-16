@@ -3,6 +3,7 @@ package com.erickdsnk.orbitalindustries;
 import com.erickdsnk.orbitalindustries.core.ConfigManager;
 import com.erickdsnk.orbitalindustries.core.OIModLogger;
 import com.erickdsnk.orbitalindustries.dimension.DimensionRegistry;
+import com.erickdsnk.orbitalindustries.dimension.OrbitWorldProvider;
 import com.erickdsnk.orbitalindustries.environment.EnvironmentManager;
 import com.erickdsnk.orbitalindustries.environment.VacuumDamageHandler;
 import com.erickdsnk.orbitalindustries.environment.impl.OxygenSystemImpl;
@@ -18,6 +19,7 @@ import com.erickdsnk.orbitalindustries.space.impl.OrbitalEnvironmentManagerImpl;
 import com.erickdsnk.orbitalindustries.transport.CommandMoon;
 import com.erickdsnk.orbitalindustries.transport.CommandOverworld;
 import com.erickdsnk.orbitalindustries.transport.LaunchManager;
+import com.erickdsnk.orbitalindustries.transport.SpaceNavigationSystem;
 import com.erickdsnk.orbitalindustries.transport.TeleportManager;
 import com.erickdsnk.orbitalindustries.planet.gen.ModularTerrainGenerator;
 import com.erickdsnk.orbitalindustries.planet.gen.NoisySurfaceTerrainGenerator;
@@ -142,6 +144,9 @@ public class CommonProxy {
         OrbitalIndustriesAPI.planetRegistry.register(new Planet("earth", "Earth", 0, null, null, 1.0,
                 AtmosphereType.BREATHABLE, 1.0, true));
 
+        OrbitalIndustriesAPI.spaceNavigationSystem = new SpaceNavigationSystem(OrbitalIndustriesAPI.planetRegistry);
+        LOG.info("SpaceNavigationSystem initialized");
+
         // 6. Register dimensions for all planets that have a terrain generator
         // (data-driven)
         for (Planet planet : OrbitalIndustriesAPI.planetRegistry.getPlanets()) {
@@ -151,6 +156,11 @@ public class CommonProxy {
                 LOG.info("Registered planet dimension: " + planet.getId() + " (dim " + planet.getDimensionId() + ")");
             }
         }
+
+        // 7. Register orbit dimension (void space for rocket transfers)
+        int orbitDimId = ConfigManager.getOrbitDimensionId();
+        OrbitalIndustriesAPI.dimensionRegistry.registerDimension(orbitDimId, OrbitWorldProvider.class);
+        LOG.info("Registered orbit dimension: " + orbitDimId);
 
         GravityTickHandler gravityHandler = new GravityTickHandler();
         FMLCommonHandler.instance().bus().register(gravityHandler);
