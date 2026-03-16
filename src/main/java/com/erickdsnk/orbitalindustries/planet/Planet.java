@@ -32,20 +32,29 @@ public final class Planet {
     private final boolean hasSurface;
     private final List<PlanetBiome> biomes;
     private final List<StructureEntry> structures;
+    private final int requiredNavigationTier;
+    private final double fuelCost;
 
     /**
      * Full constructor for JSON-loaded or code-registered data. For JSON planets,
      * terrainGenerator is resolved via
      * {@link com.erickdsnk.orbitalindustries.planet.gen.PlanetTerrainRegistry}.
      *
-     * @param biomes     unmodifiable list of biomes for this dimension; may be
-     *                   empty
-     * @param structures unmodifiable list of structure entries; may be null or
-     *                   empty
+     * @param biomes                 unmodifiable list of biomes for this dimension;
+     *                               may be
+     *                               empty
+     * @param structures             unmodifiable list of structure entries; may be
+     *                               null or
+     *                               empty
+     * @param requiredNavigationTier minimum navigation tier to travel here (default
+     *                               0)
+     * @param fuelCost               fuel required to reach this planet (default
+     *                               0.0)
      */
     public Planet(String id, String name, int dimensionId, String terrainGeneratorId,
             PlanetTerrainGenerator terrainGenerator, double gravity, AtmosphereType atmosphere,
-            double orbitalDistance, boolean hasSurface, List<PlanetBiome> biomes, List<StructureEntry> structures) {
+            double orbitalDistance, boolean hasSurface, List<PlanetBiome> biomes, List<StructureEntry> structures,
+            int requiredNavigationTier, double fuelCost) {
         this.id = id;
         this.name = name;
         this.dimensionId = dimensionId;
@@ -57,6 +66,8 @@ public final class Planet {
         this.hasSurface = hasSurface;
         this.biomes = biomes == null ? Collections.<PlanetBiome>emptyList() : biomes;
         this.structures = structures == null ? null : structures;
+        this.requiredNavigationTier = requiredNavigationTier;
+        this.fuelCost = fuelCost;
     }
 
     /**
@@ -72,7 +83,7 @@ public final class Planet {
             PlanetTerrainGenerator terrainGenerator, double gravity, AtmosphereType atmosphere,
             double orbitalDistance, boolean hasSurface) {
         this(id, name, dimensionId, terrainGeneratorId, terrainGenerator, gravity, atmosphere,
-                orbitalDistance, hasSurface, Collections.<PlanetBiome>emptyList(), null);
+                orbitalDistance, hasSurface, Collections.<PlanetBiome>emptyList(), null, 0, 0.0);
     }
 
     /**
@@ -149,5 +160,15 @@ public final class Planet {
      */
     public List<StructureEntry> getStructures() {
         return structures;
+    }
+
+    /** Minimum navigation tier required for a rocket to reach this planet. */
+    public int getRequiredNavigationTier() {
+        return requiredNavigationTier;
+    }
+
+    /** Fuel cost to travel to this planet. */
+    public double getFuelCost() {
+        return fuelCost;
     }
 }
