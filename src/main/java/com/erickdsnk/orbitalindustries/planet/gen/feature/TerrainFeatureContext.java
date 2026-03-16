@@ -91,4 +91,16 @@ public final class TerrainFeatureContext {
         }
         return defaultValue;
     }
+
+    /**
+     * Get string option (e.g. block names for features). Returns null if missing or
+     * not a string.
+     */
+    public String getStringOption(String key) {
+        if (options == null || !options.containsKey(key)) {
+            return null;
+        }
+        Object v = options.get(key);
+        return v != null ? v.toString().trim() : null;
+    }
 }
