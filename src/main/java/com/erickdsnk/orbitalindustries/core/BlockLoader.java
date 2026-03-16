@@ -107,6 +107,10 @@ public final class BlockLoader {
             block.setBlockName("orbitalindustries." + id);
             block.setBlockTextureName(TEXTURE_DOMAIN + ":" + def.texture);
             GameRegistry.registerBlock(block, id);
+            String displayName = def.displayName != null && !def.displayName.trim().isEmpty()
+                    ? def.displayName.trim()
+                    : idToDisplayName(id);
+            addBlockLocalization(block.getUnlocalizedName() + ".name", displayName);
             registered.put(id, block);
         }
         blocksById = Collections.unmodifiableMap(registered);
@@ -127,6 +131,35 @@ public final class BlockLoader {
      */
     public static Map<String, Block> getRegisteredBlocks() {
         return blocksById;
+    }
+
+    /** Register block display name with Forge's LanguageRegistry if available. */
+    private static void addBlockLocalization(String key, String displayName) {
+        try {
+            Class<?> lang = Class.forName("net.minecraftforge.common.LanguageRegistry");
+            Object instance = lang.getMethod("instance").invoke(null);
+            lang.getMethod("addStringLocalization", String.class, String.class, String.class)
+                    .invoke(instance, key, "en_US", displayName);
+        } catch (Exception e) {
+            LOG.warn("Could not register block name '" + displayName + "': " + e.getMessage());
+        }
+    }
+
+    /** Convert block id to display name (e.g. moon_basalt → Moon Basalt). */
+    private static String idToDisplayName(String id) {
+        if (id == null || id.isEmpty())
+            return id;
+        StringBuilder sb = new StringBuilder();
+        for (String part : id.split("_")) {
+            if (part.isEmpty())
+                continue;
+            if (sb.length() > 0)
+                sb.append(' ');
+            sb.append(Character.toUpperCase(part.charAt(0)));
+            if (part.length() > 1)
+                sb.append(part.substring(1).toLowerCase());
+        }
+        return sb.toString();
     }
 
     @SuppressWarnings("unused")
