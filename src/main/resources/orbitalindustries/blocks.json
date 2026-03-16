@@ -1,0 +1,49 @@
+{
+  "blocks": [
+    {
+      "id": "moon_rock",
+      "material": "rock",
+      "hardness": 1.5,
+      "resistance": 10.0,
+      "soundType": "stone",
+      "harvestTool": "pickaxe",
+      "harvestLevel": 0
+    },
+    {
+      "id": "moon_surface_rock",
+      "material": "rock",
+      "hardness": 1.5,
+      "resistance": 10.0,
+      "soundType": "stone",
+      "harvestTool": "pickaxe",
+      "harvestLevel": 0
+    },
+    {
+      "id": "moon_dirt",
+      "material": "ground",
+      "hardness": 0.5,
+      "resistance": 2.5,
+      "soundType": "gravel",
+      "harvestTool": "shovel",
+      "harvestLevel": 0
+    },
+    {
+      "id": "moon_basalt",
+      "material": "rock",
+      "hardness": 2.0,
+      "resistance": 10.0,
+      "soundType": "stone",
+      "harvestTool": "pickaxe",
+      "harvestLevel": 0
+    },
+    {
+      "id": "cobbled_moon_rock",
+      "material": "rock",
+      "hardness": 1.5,
+      "resistance": 10.0,
+      "soundType": "stone",
+      "harvestTool": "pickaxe",
+      "harvestLevel": 0
+    }
+  ]
+}
