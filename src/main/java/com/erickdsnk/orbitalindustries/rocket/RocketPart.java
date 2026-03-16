@@ -3,9 +3,10 @@ package com.erickdsnk.orbitalindustries.rocket;
 /**
  * Interface for a single rocket part. Parts modify aggregated
  * {@link RocketStats}
- * when assembled into a {@link RocketBlueprint}. Implementations may be item-
- * or
- * block-based in the future.
+ * when assembled into a {@link RocketBlueprint}. Implementations may be
+ * code-based
+ * or data-driven (JSON via
+ * {@link com.erickdsnk.orbitalindustries.rocket.part.DataDrivenRocketPart}).
  */
 public interface RocketPart {
 
