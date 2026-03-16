@@ -12,6 +12,7 @@ import com.erickdsnk.orbitalindustries.space.AtmosphereManager;
 import com.erickdsnk.orbitalindustries.space.GravityManager;
 import com.erickdsnk.orbitalindustries.space.OrbitalEnvironmentManager;
 import com.erickdsnk.orbitalindustries.transport.LaunchManager;
+import com.erickdsnk.orbitalindustries.transport.SpaceNavigationSystem;
 import com.erickdsnk.orbitalindustries.transport.TeleportManager;
 
 /**
@@ -31,6 +32,7 @@ public final class OrbitalIndustriesAPI {
     public static AtmosphereManager atmosphereManager;
     public static LaunchManager launchManager;
     public static TeleportManager teleportManager;
+    public static SpaceNavigationSystem spaceNavigationSystem;
     public static VacuumDamageHandler vacuumDamageHandler;
     public static OxygenSystem oxygenSystem;
     public static PlanetStructureRegistry structureRegistry;
