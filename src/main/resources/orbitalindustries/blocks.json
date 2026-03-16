@@ -2,6 +2,7 @@
   "blocks": [
     {
       "id": "moon_rock",
+      "displayName": "Moon Rock",
       "material": "rock",
       "hardness": 1.5,
       "resistance": 10.0,
@@ -11,6 +12,7 @@
     },
     {
       "id": "moon_surface_rock",
+      "displayName": "Moon Surface Rock",
       "material": "rock",
       "hardness": 1.5,
       "resistance": 10.0,
@@ -20,6 +22,7 @@
     },
     {
       "id": "moon_dirt",
+      "displayName": "Moon Dirt",
       "material": "ground",
       "hardness": 0.5,
       "resistance": 2.5,
@@ -29,6 +32,7 @@
     },
     {
       "id": "moon_basalt",
+      "displayName": "Moon Basalt",
       "material": "rock",
       "hardness": 2.0,
       "resistance": 10.0,
@@ -38,6 +42,7 @@
     },
     {
       "id": "cobbled_moon_rock",
+      "displayName": "Cobbled Moon Rock",
       "material": "rock",
       "hardness": 1.5,
       "resistance": 10.0,
