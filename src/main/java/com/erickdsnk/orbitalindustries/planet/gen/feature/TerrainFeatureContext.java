@@ -94,13 +94,19 @@ public final class TerrainFeatureContext {
 
     /**
      * Get string option (e.g. block names for features). Returns null if missing or
-     * not a string.
+     * not a string (e.g. Gson may store numbers as Double).
      */
     public String getStringOption(String key) {
         if (options == null || !options.containsKey(key)) {
             return null;
         }
         Object v = options.get(key);
-        return v != null ? v.toString().trim() : null;
+        if (v == null)
+            return null;
+        if (v instanceof String) {
+            String s = ((String) v).trim();
+            return s.isEmpty() ? null : s;
+        }
+        return null;
     }
 }
