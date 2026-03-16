@@ -1,5 +1,11 @@
 # Block names (from blocks.json; LanguageRegistry not available in this environment)
+orbitalindustries.rocket_assembler.name=Rocket Assembler
+container.orbitalindustries.rocket_assembler=Rocket Assembler
 orbitalindustries.moon_rock.name=Moon Rock
 orbitalindustries.moon_surface_rock.name=Moon Surface Rock
 orbitalindustries.moon_dirt.name=Moon Dirt
 orbitalindustries.moon_basalt.name=Moon Basalt
+
+# Items
+orbitalindustries.rocket_part.name=Rocket Part
+orbitalindustries.rocket.name=Rocket
