@@ -1,10 +1,12 @@
 package com.erickdsnk.orbitalindustries.transport;
 
+import com.erickdsnk.orbitalindustries.rocket.EntityRocket;
+
 /**
- * Placeholder for launch logic (e.g. surface to orbit). No gameplay implementation yet.
- *
- * TODO: Fuel checks and countdown before launch.
- * TODO: Transition to space dimension; integrate with TeleportManager and RocketInterface.
+ * Launch logic for rockets. Validates via {@link RocketInterface#canLaunch()}
+ * and
+ * starts the launch sequence; {@link EntityRocket} handles countdown, ascent,
+ * and teleport to orbit in its tick.
  */
 public final class LaunchManager {
 
@@ -13,9 +15,15 @@ public final class LaunchManager {
     }
 
     /**
-     * TODO: Execute launch sequence and teleport to target dimension.
+     * Start the launch sequence. For {@link EntityRocket}, this triggers countdown
+     * and ascent; the entity then teleports the passenger to the orbit dimension.
      */
     public void launch(RocketInterface rocket) {
-        // Scaffolding only.
+        if (rocket == null || !canLaunch(rocket)) {
+            return;
+        }
+        if (rocket instanceof EntityRocket) {
+            ((EntityRocket) rocket).startLaunch();
+        }
     }
 }
