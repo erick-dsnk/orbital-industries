@@ -1,13 +1,15 @@
 package com.erickdsnk.orbitalindustries.registry;
 
+import com.erickdsnk.orbitalindustries.core.BlockLoader;
+
 /**
- * Central registration for mod blocks. Register with GameRegistry during preInit.
- *
- * TODO: Create and register blocks (e.g. oxygen seal, rocket blocks); keep names in one place.
+ * Central registration for mod blocks. Delegates to {@link BlockLoader} for
+ * data-driven registration from {@code orbitalindustries/blocks.json}. New
+ * blocks are added by editing the JSON; no code changes required.
  */
 public final class BlockRegistry {
 
     public static void registerBlocks() {
-        // TODO: Instantiate blocks and GameRegistry.registerBlock(...)
+        BlockLoader.loadBlocks();
     }
 }
