@@ -1,11 +1,13 @@
-# Block names (from blocks.json; LanguageRegistry not available in this environment)
-orbitalindustries.rocket_assembler.name=Rocket Assembler
-container.orbitalindustries.rocket_assembler=Rocket Assembler
-orbitalindustries.moon_rock.name=Moon Rock
-orbitalindustries.moon_surface_rock.name=Moon Surface Rock
-orbitalindustries.moon_dirt.name=Moon Dirt
-orbitalindustries.moon_basalt.name=Moon Basalt
+# Creative tab
+itemGroup.orbitalindustries=Orbital Industries
 
-# Items
-orbitalindustries.rocket_part.name=Rocket Part
-orbitalindustries.rocket.name=Rocket
+# Blocks (1.7.10 uses tile. prefix for block names)
+tile.orbitalindustries.rocket_assembler.name=Rocket Assembler
+tile.orbitalindustries.moon_rock.name=Moon Rock
+tile.orbitalindustries.moon_surface_rock.name=Moon Surface Rock
+tile.orbitalindustries.moon_dirt.name=Moon Dirt
+tile.orbitalindustries.moon_basalt.name=Moon Basalt
+
+# Items (1.7.10 uses item. prefix for item names)
+item.orbitalindustries.rocket_part.name=Rocket Part
+item.orbitalindustries.rocket.name=Rocket
