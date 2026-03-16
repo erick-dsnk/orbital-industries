@@ -1,7 +1,6 @@
 package com.erickdsnk.orbitalindustries.core;
 
 import net.minecraft.block.Block;
-import net.minecraft.init.Blocks;
 
 /**
  * Resolves block names from JSON config (e.g. "minecraft:stone",
@@ -38,7 +37,11 @@ public final class BlockResolver {
             return fallback;
         }
         String key = name.trim();
-        Block block = Block.getBlockFromName(key);
+        Block block = resolveModBlock(key);
+        if (block != null) {
+            return block;
+        }
+        block = Block.getBlockFromName(key);
         if (block == null && key.indexOf(':') > 0) {
             block = Block.getBlockFromName(key.substring(key.indexOf(':') + 1));
         }
@@ -47,5 +50,11 @@ public final class BlockResolver {
             return fallback;
         }
         return block;
+    }
+
+    /** Resolve OrbitalIndustries block names (e.g. "OrbitalIndustries:moon_rock"). */
+    private static Block resolveModBlock(String key) {
+        String name = key.indexOf(':') >= 0 ? key.substring(key.indexOf(':') + 1) : key;
+        return name != null ? BlockLoader.getBlock(name) : null;
     }
 }
