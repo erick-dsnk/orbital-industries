@@ -39,16 +39,6 @@
       "soundType": "stone",
       "harvestTool": "pickaxe",
       "harvestLevel": 0
-    },
-    {
-      "id": "cobbled_moon_rock",
-      "displayName": "Cobbled Moon Rock",
-      "material": "rock",
-      "hardness": 1.5,
-      "resistance": 10.0,
-      "soundType": "stone",
-      "harvestTool": "pickaxe",
-      "harvestLevel": 0
     }
   ]
 }
