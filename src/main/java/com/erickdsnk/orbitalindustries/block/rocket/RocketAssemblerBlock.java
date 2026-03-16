@@ -3,7 +3,9 @@ package com.erickdsnk.orbitalindustries.block.rocket;
 import net.minecraft.block.BlockContainer;
 import net.minecraft.block.material.Material;
 import net.minecraft.client.renderer.texture.IIconRegister;
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.IIcon;
 import net.minecraft.world.World;
@@ -49,16 +51,30 @@ public class RocketAssemblerBlock extends BlockContainer {
     @Override
     @SideOnly(Side.CLIENT)
     public IIcon getIcon(int side, int metadata) {
-        switch (side) {
-            case 0:
-                return iconBottom;
-            case 1:
-                return iconTop;
-            case 3:
-                return iconFront;
-            default:
-                return iconSide;
+        if (side == 0)
+            return iconBottom;
+        if (side == 1)
+            return iconTop;
+        // metadata 0=south(3), 1=west(4), 2=north(2), 3=east(5)
+        int frontSide = new int[] { 3, 4, 2, 5 }[metadata & 3];
+        if (side == frontSide)
+            return iconFront;
+        return iconSide;
+    }
+
+    @Override
+    public void onBlockPlacedBy(World world, int x, int y, int z, EntityLivingBase placer, ItemStack stack) {
+        super.onBlockPlacedBy(world, x, y, z, placer, stack);
+        // Face the front (control panel) toward the player
+        double dx = placer.posX - (x + 0.5);
+        double dz = placer.posZ - (z + 0.5);
+        int meta;
+        if (Math.abs(dx) > Math.abs(dz)) {
+            meta = dx > 0 ? 3 : 1; // east : west
+        } else {
+            meta = dz > 0 ? 0 : 2; // south : north
         }
+        world.setBlockMetadataWithNotify(x, y, z, meta, 2);
     }
 
     @Override
