@@ -162,8 +162,13 @@ public final class PlanetLoader {
                 double gravity = config.gravity != null ? config.gravity.doubleValue() : DEFAULT_GRAVITY;
                 AtmosphereType atmosphere = parseAtmosphere(config.atmosphere);
                 List<StructureEntry> structures = resolveStructures(config.structures);
+                int requiredNavigationTier = config.requiredNavigationTier != null
+                        ? config.requiredNavigationTier.intValue()
+                        : 0;
+                double fuelCost = config.fuelCost != null ? config.fuelCost.doubleValue() : 0.0;
                 Planet planet = new Planet(config.id, config.name, config.dimensionId, config.terrainGenerator,
-                        generator, gravity, atmosphere, 0.0, generator != null, biomes, structures);
+                        generator, gravity, atmosphere, 0.0, generator != null, biomes, structures,
+                        requiredNavigationTier, fuelCost);
                 OrbitalIndustriesAPI.planetRegistry.registerPlanet(planet);
                 seenDimensions.add(config.dimensionId);
                 LOG.info("Registered planet: id=" + config.id + ", dimensionId=" + config.dimensionId);
@@ -238,6 +243,8 @@ public final class PlanetLoader {
         Map<String, Object> generatorOptions;
         List<BiomeConfig> biomes;
         List<StructureConfig> structures;
+        Integer requiredNavigationTier;
+        Double fuelCost;
     }
 
     @SuppressWarnings("unused")
