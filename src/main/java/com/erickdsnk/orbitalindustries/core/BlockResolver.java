@@ -52,7 +52,9 @@ public final class BlockResolver {
         return block;
     }
 
-    /** Resolve OrbitalIndustries block names (e.g. "OrbitalIndustries:moon_rock"). */
+    /**
+     * Resolve OrbitalIndustries block names (e.g. "OrbitalIndustries:moon_rock").
+     */
     private static Block resolveModBlock(String key) {
         String name = key.indexOf(':') >= 0 ? key.substring(key.indexOf(':') + 1) : key;
         return name != null ? BlockLoader.getBlock(name) : null;
