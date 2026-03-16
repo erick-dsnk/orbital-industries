@@ -15,16 +15,16 @@
     {
       "id": "moon_smooth_plains",
       "displayName": "Smooth Plains",
-      "surfaceBlock": "minecraft:end_stone",
-      "stoneBlock": "minecraft:stone",
+      "surfaceBlock": "OrbitalIndustries:moon_surface_rock",
+      "stoneBlock": "OrbitalIndustries:moon_rock",
       "terrainHeightModifier": 0.0,
       "craterProbabilityModifier": 0.4
     },
     {
       "id": "moon_crater_highlands",
       "displayName": "Crater Highlands",
-      "surfaceBlock": "minecraft:end_stone",
-      "stoneBlock": "minecraft:stone",
+      "surfaceBlock": "OrbitalIndustries:moon_surface_rock",
+      "stoneBlock": "OrbitalIndustries:moon_basalt",
       "terrainHeightModifier": 4.0,
       "craterProbabilityModifier": 2.0
     }
