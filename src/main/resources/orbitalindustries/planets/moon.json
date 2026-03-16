@@ -3,6 +3,8 @@
   "name": "Moon",
   "dimensionId": -40,
   "terrainGenerator": "noisy_surface",
+  "requiredNavigationTier": 1,
+  "fuelCost": 200,
   "gravity": 0.16,
   "atmosphere": "NONE",
   "generatorOptions": {
