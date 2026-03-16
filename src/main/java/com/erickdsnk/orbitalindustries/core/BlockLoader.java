@@ -135,7 +135,10 @@ public final class BlockLoader {
         return blocksById;
     }
 
-    /** Register block display name with Forge's LanguageRegistry if available. */
+    /**
+     * Register block display name with Forge's LanguageRegistry if available
+     * (optional; .lang file is primary).
+     */
     private static void addBlockLocalization(String key, String displayName) {
         try {
             Class<?> lang = Class.forName("net.minecraftforge.common.LanguageRegistry");
@@ -143,7 +146,7 @@ public final class BlockLoader {
             lang.getMethod("addStringLocalization", String.class, String.class, String.class)
                     .invoke(instance, key, "en_US", displayName);
         } catch (Exception e) {
-            LOG.warn("Could not register block name '" + displayName + "': " + e.getMessage());
+            LOG.debug("LanguageRegistry not available; using lang file for '" + displayName + "': " + e.getMessage());
         }
     }
 

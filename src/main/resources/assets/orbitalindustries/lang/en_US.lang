@@ -1,7 +1,5 @@
-# Orbital Industries - creative tab and block names
-itemGroup.orbitalindustries=Orbital Industries
-
-tile.orbitalindustries.moon_rock.name=Moon Rock
-tile.orbitalindustries.moon_surface_rock.name=Moon Surface Rock
-tile.orbitalindustries.moon_dirt.name=Moon Dirt
-tile.orbitalindustries.moon_basalt.name=Moon Basalt
+# Block names (from blocks.json; LanguageRegistry not available in this environment)
+orbitalindustries.moon_rock.name=Moon Rock
+orbitalindustries.moon_surface_rock.name=Moon Surface Rock
+orbitalindustries.moon_dirt.name=Moon Dirt
+orbitalindustries.moon_basalt.name=Moon Basalt
