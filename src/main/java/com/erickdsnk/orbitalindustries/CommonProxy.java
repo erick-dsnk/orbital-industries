@@ -7,6 +7,7 @@ import com.erickdsnk.orbitalindustries.dimension.OrbitWorldProvider;
 import com.erickdsnk.orbitalindustries.environment.EnvironmentManager;
 import com.erickdsnk.orbitalindustries.environment.VacuumDamageHandler;
 import com.erickdsnk.orbitalindustries.environment.impl.OxygenSystemImpl;
+import com.erickdsnk.orbitalindustries.gui.GuiHandler;
 import com.erickdsnk.orbitalindustries.network.PacketHandler;
 import com.erickdsnk.orbitalindustries.planet.PlanetManager;
 import com.erickdsnk.orbitalindustries.planet.PlanetRegistry;
@@ -180,6 +181,9 @@ public class CommonProxy {
 
         PacketHandler.registerPackets();
         LOG.info("PacketHandler ready");
+        cpw.mods.fml.common.network.NetworkRegistry.INSTANCE.registerGuiHandler(OrbitalIndustries.instance,
+                new GuiHandler());
+        LOG.info("GuiHandler registered");
     }
 
     public void postInit(FMLPostInitializationEvent event) {
