@@ -101,10 +101,26 @@ public final class PlanetLoader {
                             // If config doesn't define biomes, keep biomes from resource defaults so
                             // partial overrides (e.g. generatorOptions only) don't wipe them out.
                             PlanetConfig existing = byId.get(config.id);
-                            if (existing != null
-                                    && (config.biomes == null || config.biomes.isEmpty())
-                                    && existing.biomes != null && !existing.biomes.isEmpty()) {
-                                config.biomes = existing.biomes;
+                            if (existing != null) {
+                                if (config.biomes == null || config.biomes.isEmpty()) {
+                                    if (existing.biomes != null && !existing.biomes.isEmpty()) {
+                                        config.biomes = existing.biomes;
+                                    }
+                                }
+                                // Merge generatorOptions: keep any key from defaults missing in config
+                                // so new options (e.g. craterFloorBlock) apply even with old config files.
+                                if (existing.generatorOptions != null && !existing.generatorOptions.isEmpty()) {
+                                    if (config.generatorOptions == null) {
+                                        config.generatorOptions = new LinkedHashMap<String, Object>(
+                                                existing.generatorOptions);
+                                    } else {
+                                        for (Map.Entry<String, Object> e : existing.generatorOptions.entrySet()) {
+                                            if (!config.generatorOptions.containsKey(e.getKey())) {
+                                                config.generatorOptions.put(e.getKey(), e.getValue());
+                                            }
+                                        }
+                                    }
+                                }
                             }
                             byId.put(config.id, config);
                             LOG.info("Loaded planet from config: " + file.getName() + " (id=" + config.id + ")");
