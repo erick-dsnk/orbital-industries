@@ -1,0 +1,6 @@
+# Orbital Industries block names (defaults; overridden by blocks.json displayName when registered at runtime)
+tile.orbitalindustries.moon_rock.name=Moon Rock
+tile.orbitalindustries.moon_surface_rock.name=Moon Surface Rock
+tile.orbitalindustries.moon_dirt.name=Moon Dirt
+tile.orbitalindustries.moon_basalt.name=Moon Basalt
+tile.orbitalindustries.cobbled_moon_rock.name=Cobbled Moon Rock
