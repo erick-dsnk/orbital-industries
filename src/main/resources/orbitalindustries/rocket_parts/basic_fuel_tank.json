@@ -1,0 +1,6 @@
+{
+  "id": "basic_fuel_tank",
+  "type": "FUEL_TANK",
+  "fuelCapacity": 200,
+  "mass": 20
+}
