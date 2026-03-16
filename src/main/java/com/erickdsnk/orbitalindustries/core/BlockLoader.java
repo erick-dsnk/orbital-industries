@@ -14,6 +14,7 @@ import java.util.Map;
 
 import com.erickdsnk.orbitalindustries.block.BlockDefinition;
 import com.erickdsnk.orbitalindustries.block.BlockFromDefinition;
+import com.erickdsnk.orbitalindustries.registry.CreativeTabOI;
 
 import cpw.mods.fml.common.Loader;
 import cpw.mods.fml.common.registry.GameRegistry;
@@ -106,6 +107,7 @@ public final class BlockLoader {
             Block block = new BlockFromDefinition(def);
             block.setBlockName("orbitalindustries." + id);
             block.setBlockTextureName(TEXTURE_DOMAIN + ":" + def.texture);
+            block.setCreativeTab(CreativeTabOI.TAB);
             GameRegistry.registerBlock(block, id);
             String displayName = def.displayName != null && !def.displayName.trim().isEmpty()
                     ? def.displayName.trim()
