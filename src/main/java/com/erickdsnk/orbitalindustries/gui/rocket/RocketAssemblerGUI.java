@@ -24,6 +24,11 @@ public class RocketAssemblerGUI extends GuiContainer {
     private static final ResourceLocation TEXTURE = new ResourceLocation("orbitalindustries",
             "textures/gui/rocket_assembler.png");
 
+    private static final int BUTTON_ASSEMBLE = 0;
+
+    private static final int BUTTON_X = 63;
+    private static final int BUTTON_Y = 138;
+
     private static final int TEXTURE_WIDTH = 256;
     private static final int TEXTURE_HEIGHT = 256;
     /**
@@ -49,17 +54,17 @@ public class RocketAssemblerGUI extends GuiContainer {
     @Override
     public void initGui() {
         super.initGui();
-        // buttonList.add(new GuiButton(BUTTON_ASSEMBLE, guiLeft + BUTTON_X, guiTop +
-        // BUTTON_Y, 70, 20, "Assemble"));
+        buttonList.add(new GuiButton(BUTTON_ASSEMBLE, guiLeft + BUTTON_X, guiTop +
+                BUTTON_Y, 65, 18, "Assemble"));
     }
 
     @Override
     protected void actionPerformed(GuiButton button) {
-        // if (button.id == BUTTON_ASSEMBLE) {
-        // RocketAssemblerTileEntity tile = container.getTile();
-        // PacketHandler.CHANNEL.sendToServer(new AssembleRocketPacket(tile.xCoord,
-        // tile.yCoord, tile.zCoord));
-        // }
+        if (button.id == BUTTON_ASSEMBLE) {
+            RocketAssemblerTileEntity tile = container.getTile();
+            PacketHandler.CHANNEL.sendToServer(new AssembleRocketPacket(tile.xCoord,
+                    tile.yCoord, tile.zCoord));
+        }
     }
 
     @Override
