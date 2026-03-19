@@ -1,0 +1,7 @@
+{
+  "id": "medium_fuel_tank",
+  "type": "FUEL_TANK",
+  "fuelCapacity": 400,
+  "maxRange": 220,
+  "mass": 35
+}

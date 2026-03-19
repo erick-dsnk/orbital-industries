@@ -1,6 +1,6 @@
 {
   "id": "basic_engine",
   "type": "ENGINE",
-  "thrust": 120,
+  "thrust": 100,
   "mass": 30
 }

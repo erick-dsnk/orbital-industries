@@ -1,6 +1,7 @@
 {
-  "id": "basic_fuel_tank",
+  "id": "small_fuel_tank",
   "type": "FUEL_TANK",
   "fuelCapacity": 200,
+  "maxRange": 200,
   "mass": 20
 }

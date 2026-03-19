@@ -1,0 +1,6 @@
+{
+  "id": "improved_engine",
+  "type": "ENGINE",
+  "thrust": 200,
+  "mass": 45
+}
