@@ -35,7 +35,6 @@ import com.erickdsnk.orbitalindustries.planet.biome.PlanetBiome;
 import com.erickdsnk.orbitalindustries.planet.biome.PlanetBiomeRegistry;
 import com.erickdsnk.orbitalindustries.planet.structure.NoOpStructureGenerator;
 import com.erickdsnk.orbitalindustries.planet.structure.PlanetStructureRegistry;
-import com.erickdsnk.orbitalindustries.rocket.RocketPartLoader;
 import com.erickdsnk.orbitalindustries.rocket.RocketPartRegistry;
 
 import java.util.Arrays;
@@ -141,7 +140,7 @@ public class CommonProxy {
         OrbitalIndustriesAPI.structureRegistry.register("abandoned_shelter", new NoOpStructureGenerator());
         LOG.info("Structure types registered");
 
-        RocketPartLoader.loadParts(OrbitalIndustriesAPI.rocketPartRegistry);
+        OrbitalIndustriesAPI.rocketPartRegistry.loadAll();
         LOG.info("Rocket parts loaded");
 
         // 3. Load planet definitions from config/orbitalindustries/planets/
