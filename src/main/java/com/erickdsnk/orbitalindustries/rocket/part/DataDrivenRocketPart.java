@@ -1,54 +1,55 @@
 package com.erickdsnk.orbitalindustries.rocket.part;
 
 import com.erickdsnk.orbitalindustries.rocket.RocketPart;
+import com.erickdsnk.orbitalindustries.rocket.RocketPartDefinition;
 import com.erickdsnk.orbitalindustries.rocket.RocketPartType;
 import com.erickdsnk.orbitalindustries.rocket.RocketStats;
 
 /**
- * {@link RocketPart} implementation loaded from JSON. Applies whichever stat
- * fields are defined (thrust, fuelCapacity, mass, navigationTier, maxRange).
+ * {@link RocketPart} implementation loaded from JSON via
+ * {@link RocketPartDefinition}.
  */
 public final class DataDrivenRocketPart implements RocketPart {
 
-    private final String id;
-    private final RocketPartType type;
-    private final double thrust;
-    private final double fuelCapacity;
-    private final double mass;
-    private final int navigationTier;
-    private final double maxRange;
+    private final RocketPartDefinition def;
 
-    public DataDrivenRocketPart(String id, RocketPartType type,
-            double thrust, double fuelCapacity, double mass, int navigationTier, double maxRange) {
-        this.id = id;
-        this.type = type != null ? type : RocketPartType.HULL;
-        this.thrust = thrust;
-        this.fuelCapacity = fuelCapacity;
-        this.mass = mass;
-        this.navigationTier = navigationTier;
-        this.maxRange = maxRange;
+    public DataDrivenRocketPart(RocketPartDefinition def) {
+        if (def == null) {
+            throw new IllegalArgumentException("def");
+        }
+        this.def = def;
+    }
+
+    public RocketPartDefinition getDefinition() {
+        return def;
     }
 
     public String getId() {
-        return id;
+        return def.getId();
     }
 
     @Override
     public RocketPartType getType() {
-        return type;
+        RocketPartType t = def.getType();
+        return t != null ? t : RocketPartType.HULL;
     }
 
     @Override
     public void modifyStats(RocketStats stats) {
-        if (thrust != 0.0)
-            stats.addThrust(thrust);
-        if (fuelCapacity != 0.0)
-            stats.addFuelCapacity(fuelCapacity);
-        if (mass != 0.0)
-            stats.addMass(mass);
-        if (navigationTier != 0)
-            stats.addNavigationTier(navigationTier);
-        if (maxRange != 0.0)
-            stats.addMaxRange(maxRange);
+        if (def.getThrust() != 0.0) {
+            stats.addThrust(def.getThrust());
+        }
+        if (def.getFuelCapacity() != 0.0) {
+            stats.addFuelCapacity(def.getFuelCapacity());
+        }
+        if (def.getMass() != 0.0) {
+            stats.addMass(def.getMass());
+        }
+        if (def.getNavigationTier() != 0) {
+            stats.addNavigationTier(def.getNavigationTier());
+        }
+        if (def.getMaxRange() != 0.0) {
+            stats.addMaxRange(def.getMaxRange());
+        }
     }
 }
