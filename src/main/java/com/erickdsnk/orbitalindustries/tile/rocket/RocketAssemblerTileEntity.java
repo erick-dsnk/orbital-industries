@@ -128,7 +128,7 @@ public class RocketAssemblerTileEntity extends TileEntity implements IInventory 
         RocketPartRegistry registry = OrbitalIndustriesAPI.rocketPartRegistry;
         if (registry == null)
             return false;
-        RocketPart part = registry.getById(partId);
+        RocketPart part = registry.getPartFromItem(stack);
         if (part == null)
             return false;
         RocketPartType required = getRequiredTypeForSlot(index);
@@ -170,14 +170,11 @@ public class RocketAssemblerTileEntity extends TileEntity implements IInventory 
             ItemStack stack = slots[i];
             if (stack == null || !(stack.getItem() instanceof ItemRocketPart))
                 continue;
-            String partId = ItemRocketPart.getPartId(stack);
-            if (partId == null || partId.isEmpty())
-                continue;
-            RocketPart part = registry.getById(partId);
+            RocketPart part = registry.getPartFromItem(stack);
             if (part == null || part.getType() != getRequiredTypeForSlot(i))
                 continue;
             parts.add(part);
-            partIds.add(partId);
+            partIds.add(ItemRocketPart.getPartId(stack));
         }
         if (parts.isEmpty()) {
             blueprint = null;
