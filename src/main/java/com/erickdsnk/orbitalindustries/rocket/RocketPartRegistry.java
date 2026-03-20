@@ -21,6 +21,11 @@ public final class RocketPartRegistry {
 
     private final Map<String, RocketPartDefinition> definitions = new LinkedHashMap<String, RocketPartDefinition>();
     private final Map<String, RocketPart> parts = new LinkedHashMap<String, RocketPart>();
+    /**
+     * Registration order → 1.7.10 item damage / icon subtype index (stable if load
+     * order matches).
+     */
+    private final List<String> orderedPartIds = new ArrayList<String>();
 
     /**
      * Load default assets and config overrides into this registry.
@@ -28,6 +33,7 @@ public final class RocketPartRegistry {
     public void loadAll() {
         definitions.clear();
         parts.clear();
+        orderedPartIds.clear();
         RocketPartLoader.loadInto(this);
     }
 
@@ -43,8 +49,35 @@ public final class RocketPartRegistry {
         if (def.getType() == null) {
             def.setType(RocketPartType.HULL);
         }
+        if (!definitions.containsKey(def.getId())) {
+            orderedPartIds.add(def.getId());
+        }
         definitions.put(def.getId(), def);
         parts.put(def.getId(), new DataDrivenRocketPart(def));
+    }
+
+    /**
+     * Item damage / creative subtype index for this part (0 .. n-1). Used on 1.7.10
+     * where rendering often calls {@link net.minecraft.item.Item#getIconFromDamage}
+     * instead of {@code getIcon(ItemStack, int)}.
+     */
+    public int getSubtypeMetaForPartId(String id) {
+        if (id == null) {
+            return 0;
+        }
+        int i = orderedPartIds.indexOf(id);
+        return i >= 0 ? i : 0;
+    }
+
+    public String getPartIdForSubtypeMeta(int meta) {
+        if (meta >= 0 && meta < orderedPartIds.size()) {
+            return orderedPartIds.get(meta);
+        }
+        return null;
+    }
+
+    public List<String> getOrderedPartIds() {
+        return Collections.unmodifiableList(orderedPartIds);
     }
 
     /** Definition by id, or null if unknown. */
@@ -65,7 +98,7 @@ public final class RocketPartRegistry {
         if (stack == null || !(stack.getItem() instanceof ItemRocketPart)) {
             return null;
         }
-        String partId = ItemRocketPart.getPartId(stack);
+        String partId = ItemRocketPart.getEffectivePartId(stack);
         if (partId == null || partId.isEmpty()) {
             return null;
         }
