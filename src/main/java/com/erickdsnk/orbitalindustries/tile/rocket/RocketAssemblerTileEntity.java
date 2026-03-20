@@ -122,9 +122,6 @@ public class RocketAssemblerTileEntity extends TileEntity implements IInventory 
             return false;
         if (stack == null || !(stack.getItem() instanceof ItemRocketPart))
             return false;
-        String partId = ItemRocketPart.getPartId(stack);
-        if (partId == null || partId.isEmpty())
-            return false;
         RocketPartRegistry registry = OrbitalIndustriesAPI.rocketPartRegistry;
         if (registry == null)
             return false;
@@ -174,7 +171,7 @@ public class RocketAssemblerTileEntity extends TileEntity implements IInventory 
             if (part == null || part.getType() != getRequiredTypeForSlot(i))
                 continue;
             parts.add(part);
-            partIds.add(ItemRocketPart.getPartId(stack));
+            partIds.add(ItemRocketPart.getEffectivePartId(stack));
         }
         if (parts.isEmpty()) {
             blueprint = null;
