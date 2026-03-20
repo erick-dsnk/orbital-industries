@@ -37,14 +37,15 @@ public class RocketAssemblerContainer extends Container {
     public RocketAssemblerContainer(InventoryPlayer playerInv, RocketAssemblerTileEntity tile) {
         this.tile = tile;
 
-        // // Left column: engine(0), guidance(1), hull(2), payload(3)
+        // Left column: engine(0), guidance(1), hull(2), payload(3)
         for (int i = 0; i < 4; i++) {
-            addSlotToContainer(new Slot(tile, i, LEFT_COL_X, SLOT_Y_START + i * (SLOT_DY + LEFT_COL_GAP)));
+            addSlotToContainer(new SlotRocketPart(tile, i, LEFT_COL_X, SLOT_Y_START + i * (SLOT_DY + LEFT_COL_GAP)));
         }
 
         // Second column: fuel (4-8)
         for (int i = 0; i < 5; i++) {
-            addSlotToContainer(new Slot(tile, 4 + i, FUEL_COL_X, SLOT_Y_START + i * (SLOT_DY + FUEL_COL_GAP)));
+            addSlotToContainer(new SlotRocketPart(tile, 4 + i, FUEL_COL_X,
+                    SLOT_Y_START + i * (SLOT_DY + FUEL_COL_GAP)));
         }
 
         addSlotToContainer(new SlotOutput(tile, 9, OUTPUT_X, OUTPUT_Y));
@@ -90,6 +91,90 @@ public class RocketAssemblerContainer extends Container {
                 slot.onSlotChanged();
         }
         return copy;
+    }
+
+    /**
+     * Vanilla {@link Container#mergeItemStack} puts stacks into the first empty
+     * slot
+     * without calling {@link Slot#isItemValid}, so shift-click ignored assembler
+     * slot
+     * rules. Require {@code isItemValid} before placing into an empty slot.
+     */
+    @Override
+    protected boolean mergeItemStack(ItemStack stack, int start, int end, boolean reverse) {
+        boolean didMerge = false;
+        int k = start;
+        if (reverse) {
+            k = end - 1;
+        }
+        Slot slot;
+        ItemStack inslot;
+        if (stack.isStackable()) {
+            while (stack.stackSize > 0 && (!reverse && k < end || reverse && k >= start)) {
+                slot = (Slot) inventorySlots.get(k);
+                inslot = slot.getStack();
+                if (inslot != null && inslot.getItem() == stack.getItem()
+                        && (!stack.getHasSubtypes() || stack.getItemDamage() == inslot.getItemDamage())
+                        && ItemStack.areItemStackTagsEqual(stack, inslot)) {
+                    int total = inslot.stackSize + stack.stackSize;
+                    if (total <= stack.getMaxStackSize()) {
+                        stack.stackSize = 0;
+                        inslot.stackSize = total;
+                        slot.onSlotChanged();
+                        didMerge = true;
+                    } else if (inslot.stackSize < stack.getMaxStackSize()) {
+                        stack.stackSize -= stack.getMaxStackSize() - inslot.stackSize;
+                        inslot.stackSize = stack.getMaxStackSize();
+                        slot.onSlotChanged();
+                        didMerge = true;
+                    }
+                }
+                if (reverse) {
+                    --k;
+                } else {
+                    ++k;
+                }
+            }
+        }
+        if (stack.stackSize > 0) {
+            if (reverse) {
+                k = end - 1;
+            } else {
+                k = start;
+            }
+            while (!reverse && k < end || reverse && k >= start) {
+                slot = (Slot) inventorySlots.get(k);
+                inslot = slot.getStack();
+                if (inslot == null && slot.isItemValid(stack)) {
+                    slot.putStack(stack.copy());
+                    slot.onSlotChanged();
+                    stack.stackSize = 0;
+                    didMerge = true;
+                    break;
+                }
+                if (reverse) {
+                    --k;
+                } else {
+                    ++k;
+                }
+            }
+        }
+        return didMerge;
+    }
+
+    /**
+     * Assembler input: only parts whose {@link RocketPartType} matches the slot
+     * (vanilla {@link Slot#isItemValid} defaults to true otherwise).
+     */
+    private static class SlotRocketPart extends Slot {
+        SlotRocketPart(RocketAssemblerTileEntity inv, int index, int x, int y) {
+            super(inv, index, x, y);
+        }
+
+        @Override
+        public boolean isItemValid(ItemStack stack) {
+            return inventory.isItemValidForSlot(slotNumber, stack);
+        }
     }
 
     /** Slot that does not accept manual insertion (output slot). */
