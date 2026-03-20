@@ -11,3 +11,14 @@ tile.orbitalindustries.moon_basalt.name=Moon Basalt
 # Items (1.7.10 uses item. prefix for item names)
 item.orbitalindustries.rocket_part.name=Rocket Part
 item.orbitalindustries.rocket.name=Rocket
+
+# Rocket parts (NBT PartId; modpacks: item.orbitalindustries.rocket_part.<id>.name)
+item.orbitalindustries.rocket_part.basic_engine.name=Basic Engine
+item.orbitalindustries.rocket_part.improved_engine.name=Improved Engine
+item.orbitalindustries.rocket_part.small_fuel_tank.name=Small Fuel Tank
+item.orbitalindustries.rocket_part.medium_fuel_tank.name=Medium Fuel Tank
+item.orbitalindustries.rocket_part.basic_guidance.name=Basic Guidance
+item.orbitalindustries.rocket_part.advanced_guidance.name=Advanced Guidance
+item.orbitalindustries.rocket_part.light_hull.name=Light Hull
+item.orbitalindustries.rocket_part.heavy_hull.name=Heavy Hull
+item.orbitalindustries.rocket_part.basic_payload.name=Basic Payload
