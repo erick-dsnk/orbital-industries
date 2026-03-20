@@ -14,6 +14,8 @@ public final class RocketPartDefinition {
     private double mass;
     private int navigationTier;
     private double maxRange;
+    /** Optional item icon (e.g. {@code orbitalindustries:my_part}). */
+    private String icon;
 
     public RocketPartDefinition() {
     }
@@ -83,5 +85,13 @@ public final class RocketPartDefinition {
 
     public void setMaxRange(double maxRange) {
         this.maxRange = maxRange;
+    }
+
+    public String getIcon() {
+        return icon;
+    }
+
+    public void setIcon(String icon) {
+        this.icon = icon;
     }
 }
